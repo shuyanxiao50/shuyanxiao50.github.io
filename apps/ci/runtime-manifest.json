@@ -1,0 +1,53 @@
+{
+  "pyodideVersion": "0.28.1",
+  "files": [
+    {
+      "url": "https://cdn.jsdelivr.net/pyodide/v0.28.1/full/pyodide.js",
+      "path": "apps/ci/runtime/pyodide.js",
+      "sha256": "6a95a0441ede36697a0849eef3a9d7716db5f407ce17f441aef949f49ea2a0fd",
+      "size": 17270
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/pyodide/v0.28.1/full/pyodide.asm.js",
+      "path": "apps/ci/runtime/pyodide.asm.js",
+      "sha256": "1e93abd15303db5a04500cdaf6d8321c0739b40f4284c1f0ed27c77fd2b0ddba",
+      "size": 1072688
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/pyodide/v0.28.1/full/pyodide.asm.wasm",
+      "path": "apps/ci/runtime/pyodide.asm.wasm",
+      "sha256": "086600fc5d4f40a693f8096a00c2b2aeeafed5ec733b965e1dac3a98ab1fc64c",
+      "size": 8645622
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/pyodide/v0.28.1/full/python_stdlib.zip",
+      "path": "apps/ci/runtime/python_stdlib.zip",
+      "sha256": "da83b536518492627805307c7d39af0564c6685920d88fd2199f8d8fccfd1a18",
+      "size": 2416495
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/pyodide/v0.28.1/full/pyodide-lock.json",
+      "path": "apps/ci/runtime/pyodide-lock.json",
+      "sha256": "f6e6f42f451f42affbbcddb00e8c9a3278dcbf399f57aab9f3f568839a7ff4a6",
+      "size": 109732
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/pyodide/v0.28.1/full/numpy-2.2.5-cp313-cp313-pyodide_2025_0_wasm32.whl",
+      "path": "apps/ci/runtime/numpy-2.2.5-cp313-cp313-pyodide_2025_0_wasm32.whl",
+      "sha256": "3db3c4f3e0448f4d62a85c262692f1260ccd8a91335442bd2442f21ffeddb558",
+      "size": 3109648
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/pyodide/v0.28.1/full/opencv_python-4.11.0.86-cp313-cp313-pyodide_2025_0_wasm32.whl",
+      "path": "apps/ci/runtime/opencv_python-4.11.0.86-cp313-cp313-pyodide_2025_0_wasm32.whl",
+      "sha256": "a92d8984ec1468e99894a24f714ed90980dd263acb8c232aa18cf9378a3fdeb8",
+      "size": 11700243
+    },
+    {
+      "url": "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",
+      "path": "apps/junwei/vendor/xlsx.full.min.js",
+      "sha256": "c9506197caf809a075b6dee1da0d36fb19da7158ffe8a88e7b0c96c5d8623c99",
+      "size": 881727
+    }
+  ]
+}

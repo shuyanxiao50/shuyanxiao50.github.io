@@ -1,0 +1,1745 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>君威钢绳索具 · 智能排产助手</title>
+<style>
+:root{
+  --bg:#0E1419; --panel:#151D25; --panel2:#1B242E; --line:#26333F; --line2:#31424F;
+  --ink:#E6EDF3; --mut:#8CA0B1; --dim:#5E7384;
+  --p1:#3FA9C9; --p2:#E0A94B; --p3:#5FB97A;
+  --risk:#E4574C; --warn:#E3A63A; --ok:#5FB97A; --lock:#B57FE0;
+  --radius:3px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+body{
+  margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font-family:"Inter","Helvetica Neue",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-size:13px;line-height:1.5;font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="light"]){}}
+:root[data-theme="dark"]{}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
+a{color:var(--p1)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:#2C3B49;border-radius:5px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- shell ---------- */
+#app{display:flex;flex-direction:column;height:100%}
+header.top{
+  display:flex;align-items:center;gap:14px;padding:9px 14px;
+  background:linear-gradient(180deg,#18222C,#121A22);
+  border-bottom:1px solid var(--line);flex:0 0 auto;flex-wrap:wrap;
+  padding-top:calc(9px + env(safe-area-inset-top,0px));
+}
+.brand{display:flex;align-items:baseline;gap:9px;margin-right:4px}
+.brand b{font-size:15px;font-weight:650;letter-spacing:.2px}
+.brand span{font-size:11px;color:var(--dim)}
+.topspace{flex:1}
+.pill{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line2);
+  border-radius:99px;font-size:11.5px;color:var(--mut);background:#131C24;white-space:nowrap;
+}
+.pill b{color:var(--ink);font-weight:600}
+.btn{
+  padding:6px 12px;border:1px solid var(--line2);border-radius:var(--radius);
+  background:#1C2833;color:var(--ink);font-size:12.5px;white-space:nowrap;
+  transition:background .12s,border-color .12s;
+}
+.btn:hover{background:#243342;border-color:#3E5568}
+.btn:focus-visible{outline:2px solid var(--p1);outline-offset:1px}
+.btn.pri{background:var(--p1);border-color:var(--p1);color:#06171D;font-weight:650}
+.btn.pri:hover{background:#55BCDB}
+.btn.dgr{border-color:#6B3833;color:#F0A39C;background:#241A19}
+.btn.dgr:hover{background:#31201E}
+.btn.sm{padding:3px 8px;font-size:11.5px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+nav.tabs{display:flex;gap:0;background:#121A22;border-bottom:1px solid var(--line);flex:0 0 auto;overflow-x:auto}
+nav.tabs button{
+  padding:9px 16px;font-size:13px;color:var(--mut);border-bottom:2px solid transparent;white-space:nowrap;
+}
+nav.tabs button:hover{color:var(--ink)}
+nav.tabs button.on{color:var(--ink);border-bottom-color:var(--p1);background:#18222C}
+
+main{flex:1;overflow:auto;padding:14px}
+.view{display:none}
+.view.on{display:block}
+
+/* ---------- panels ---------- */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:14px}
+.panel>h3{
+  margin:0;padding:9px 12px;font-size:12.5px;font-weight:600;color:var(--ink);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.panel>h3 .sub{font-weight:400;color:var(--dim);font-size:11.5px}
+.panel>h3 .sp{flex:1}
+.pad{padding:12px}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+
+/* ---------- KPI ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--p1);border-radius:var(--radius);padding:10px 12px}
+.kpi .lab{font-size:11.5px;color:var(--mut)}
+.kpi .val{font-size:25px;font-weight:600;letter-spacing:-.5px;margin-top:2px;line-height:1.1}
+.kpi .val small{font-size:13px;font-weight:400;color:var(--mut);margin-left:2px}
+.kpi .dlt{font-size:11.5px;margin-top:3px;color:var(--dim)}
+.kpi.risk{border-left-color:var(--risk)} .kpi.warn{border-left-color:var(--warn)}
+.kpi.ok{border-left-color:var(--ok)} .kpi.p2{border-left-color:var(--p2)}
+.up{color:var(--ok)} .down{color:var(--risk)}
+
+/* ---------- table ---------- */
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{padding:5px 8px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--mut);font-weight:500;font-size:11.5px;background:#18212A;position:sticky;top:0;z-index:2}
+tbody tr:hover{background:#1A242E}
+tbody tr.sel{background:#1E2E3A}
+td.num,th.num{text-align:right}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px}
+
+/* ---------- tags ---------- */
+.tag{display:inline-block;padding:1px 6px;border-radius:2px;font-size:11px;border:1px solid;line-height:1.5}
+.t-p1{color:var(--p1);border-color:#2A6072;background:#122430}
+.t-p2{color:var(--p2);border-color:#6B5423;background:#241F12}
+.t-p3{color:var(--p3);border-color:#2F6640;background:#13251A}
+.t-risk{color:var(--risk);border-color:#6B3833;background:#241615}
+.t-warn{color:var(--warn);border-color:#6B5423;background:#241F12}
+.t-ok{color:var(--ok);border-color:#2F6640;background:#13251A}
+.t-mut{color:var(--mut);border-color:var(--line2);background:#182028}
+.t-lock{color:var(--lock);border-color:#513B66;background:#1E1828}
+
+/* ---------- gantt ---------- */
+.gwrap{position:relative;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);overflow:hidden}
+.gscroll{overflow:auto;max-height:62vh}
+.grow{display:flex;border-bottom:1px solid #1E2831;min-height:26px}
+.grow:hover{background:#18222B}
+.glab{
+  flex:0 0 152px;position:sticky;left:0;z-index:3;background:#161F27;
+  border-right:1px solid var(--line);padding:4px 8px;font-size:11.5px;
+  display:flex;align-items:center;justify-content:space-between;gap:6px;
+}
+.glab .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.glab .ut{color:var(--dim);font-size:10.5px;flex:0 0 auto}
+.gtrack{position:relative;flex:1;min-height:26px}
+.gbar{
+  position:absolute;top:3px;height:20px;border-radius:2px;font-size:10.5px;line-height:20px;
+  padding:0 5px;overflow:hidden;white-space:nowrap;cursor:pointer;color:#06171D;font-weight:600;
+  border:1px solid rgba(0,0,0,.35);
+}
+.gbar:hover{filter:brightness(1.18);z-index:4}
+.gbar.sel{outline:2px solid #fff;outline-offset:-1px;z-index:5}
+.gbar.late{box-shadow:inset 0 -3px 0 var(--risk)}
+.gbar.locked::after{content:"◆";margin-left:4px;opacity:.75}
+.gchg{position:absolute;top:3px;height:20px;background:repeating-linear-gradient(45deg,#4A5766,#4A5766 3px,#3A4653 3px,#3A4653 6px);border-radius:2px 0 0 2px;opacity:.9}
+.gdown{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(45deg,rgba(228,87,76,.28),rgba(228,87,76,.28) 5px,rgba(228,87,76,.12) 5px,rgba(228,87,76,.12) 10px);border-left:1px solid var(--risk);border-right:1px solid var(--risk)}
+.ghead{display:flex;position:sticky;top:0;z-index:6;background:#131B23;border-bottom:1px solid var(--line2)}
+.ghl{flex:0 0 152px;position:sticky;left:0;z-index:7;background:#131B23;border-right:1px solid var(--line);padding:5px 8px;font-size:11px;color:var(--mut)}
+.ghd{position:relative;flex:1;height:28px}
+.gtick{position:absolute;top:0;bottom:0;border-left:1px solid #22303C;font-size:10px;color:var(--dim);padding:6px 0 0 4px}
+.gtick.day{border-left-color:#33475A}
+.gnow{position:absolute;top:0;bottom:0;width:0;border-left:2px dashed var(--p2);z-index:5;pointer-events:none}
+.glegend{display:flex;gap:14px;flex-wrap:wrap;padding:8px 12px;font-size:11.5px;color:var(--mut);border-top:1px solid var(--line)}
+.sw{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+/* ---------- drawer ---------- */
+.drawer{
+  position:fixed;top:0;right:0;bottom:0;width:min(430px,92vw);background:var(--panel2);
+  border-left:1px solid var(--line2);z-index:60;transform:translateX(100%);
+  transition:transform .18s ease;display:flex;flex-direction:column;
+  box-shadow:-12px 0 32px rgba(0,0,0,.5);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.drawer.on{transform:translateX(0)}
+.drawer h4{margin:0;padding:11px 14px;border-bottom:1px solid var(--line);font-size:13px;display:flex;gap:8px;align-items:center}
+.drawer .body{flex:1;overflow:auto;padding:14px}
+.drawer .foot{border-top:1px solid var(--line);padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap}
+.kv{display:grid;grid-template-columns:82px 1fr;gap:4px 10px;font-size:12px;margin-bottom:12px}
+.kv dt{color:var(--mut)} .kv dd{margin:0}
+.why{border-left:2px solid var(--p1);padding:7px 10px;background:#141E27;margin-bottom:7px;font-size:12px;border-radius:0 2px 2px 0}
+.why b{color:var(--p1);font-weight:600}
+.why.w2{border-left-color:var(--p2)} .why.w2 b{color:var(--p2)}
+.why.w3{border-left-color:var(--p3)} .why.w3 b{color:var(--p3)}
+.why.wr{border-left-color:var(--risk)} .why.wr b{color:var(--risk)}
+.scrim{position:fixed;inset:0;background:rgba(5,9,12,.55);z-index:55;display:none}
+.scrim.on{display:block}
+
+/* ---------- forms ---------- */
+label.f{display:block;font-size:11.5px;color:var(--mut);margin:9px 0 3px}
+input[type=text],input[type=number],input[type=date],input[type=datetime-local],select,textarea{
+  width:100%;padding:5px 8px;background:#101820;border:1px solid var(--line2);
+  border-radius:var(--radius);font-size:12.5px;
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--p1)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.row>*{flex:1;min-width:120px}
+.hint{font-size:11.5px;color:var(--dim);margin-top:5px;line-height:1.55}
+.chk{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mut)}
+.chk input{width:auto;flex:0 0 auto}
+
+/* ---------- misc ---------- */
+.bars{display:flex;flex-direction:column;gap:3px}
+.bl{display:flex;align-items:center;gap:8px;font-size:11.5px}
+.bl .n{flex:0 0 120px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bl .t{flex:1;height:13px;background:#101820;border-radius:2px;overflow:hidden;position:relative}
+.bl .t i{display:block;height:100%;background:var(--p1)}
+.bl .v{flex:0 0 52px;text-align:right;color:var(--mut)}
+.risklist{display:flex;flex-direction:column;gap:6px}
+.ri{display:flex;gap:9px;padding:7px 10px;background:#141C24;border-left:3px solid var(--warn);border-radius:0 2px 2px 0;font-size:12px;align-items:flex-start}
+.ri.r1{border-left-color:var(--risk)}
+.ri .ic{flex:0 0 auto;font-weight:700;color:var(--warn)}
+.ri.r1 .ic{color:var(--risk)}
+.ri .tx{flex:1;line-height:1.5}
+.ri .tx b{font-weight:600}
+.empty{padding:26px;text-align:center;color:var(--dim);font-size:12.5px}
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(14px);
+  background:#22303C;border:1px solid var(--line2);color:var(--ink);padding:9px 16px;
+  border-radius:var(--radius);z-index:90;opacity:0;pointer-events:none;transition:.2s;font-size:12.5px;
+  max-width:88vw;text-align:center;
+}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.busy{position:fixed;inset:0;background:rgba(10,15,20,.72);z-index:95;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;font-size:13px;color:var(--mut)}
+.busy.on{display:flex}
+.spin{width:26px;height:26px;border:2px solid #2C3B49;border-top-color:var(--p1);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+svg.chart{width:100%;height:auto;display:block}
+.sgrid{stroke:#22303C;stroke-width:1}
+.stxt{fill:var(--dim);font-size:10px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--mut);margin-top:8px}
+@media (max-width:720px){
+  .glab,.ghl{flex-basis:104px}
+  main{padding:9px}
+  .kpi .val{font-size:21px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+<header class="top">
+  <div class="brand"><b>君威智能排产助手</b><span>钢绳索具 · 拉丝→捻股→合绳</span></div>
+  <span class="pill" id="pHorizon">计划起点 <b>—</b></span>
+  <span class="pill" id="pScale">订单 <b>0</b> · 工序 <b>0</b></span>
+  <span class="pill">公开演示 · 合成数据</span><a href="/projects/junwei-scheduling/">返回作品集</a><div class="topspace"></div>
+  <button class="btn" id="bUndo" disabled>撤销重排</button>
+  <button class="btn" id="bSave">保存为方案</button>
+  <button class="btn pri" id="bRun">重新排产</button>
+</header>
+<nav class="tabs" id="tabs">
+  <button class="on" data-v="v-dash">总览与风险</button>
+  <button data-v="v-plan">排产计划</button>
+  <button data-v="v-gantt">甘特图</button>
+  <button data-v="v-dis">插单与异常重排</button>
+  <button data-v="v-sc">方案对比</button>
+  <button data-v="v-ana">生产数据分析</button>
+  <button data-v="v-data">数据导入导出</button>
+  <button data-v="v-rule">规则与算法</button>
+</nav>
+<main>
+  <section class="view on" id="v-dash"></section>
+  <section class="view" id="v-plan"></section>
+  <section class="view" id="v-gantt"></section>
+  <section class="view" id="v-dis"></section>
+  <section class="view" id="v-sc"></section>
+  <section class="view" id="v-ana"></section>
+  <section class="view" id="v-data"></section>
+  <section class="view" id="v-rule"></section>
+</main>
+</div>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer">
+  <h4><span id="dwTitle">排产依据</span><span style="flex:1"></span><button class="btn sm" id="dwClose">关闭</button></h4>
+  <div class="body" id="dwBody"></div>
+  <div class="foot" id="dwFoot"></div>
+</aside>
+<div class="toast" id="toast"></div>
+<div class="busy" id="busy"><div class="spin"></div><div id="busyTx">正在排产…</div></div>
+<script src="./vendor/xlsx.full.min.js"></script>
+<script>
+const DATA={"draw":[{"id":"D001","name":"演示拉丝机 01","type":"湿拉机","lo":0.22,"hi":1.8,"raw":144000,"spd":"演示速率","kgday":1200},{"id":"D002","name":"演示拉丝机 02","type":"湿拉机","lo":0.22,"hi":1.8,"raw":171600,"spd":"演示速率","kgday":1430},{"id":"D003","name":"演示拉丝机 03","type":"湿拉机","lo":0.22,"hi":1.8,"raw":199200,"spd":"演示速率","kgday":1660},{"id":"D004","name":"演示拉丝机 04","type":"湿拉机","lo":0.22,"hi":1.8,"raw":226800,"spd":"演示速率","kgday":1890},{"id":"D005","name":"演示拉丝机 05","type":"湿拉机","lo":0.22,"hi":1.8,"raw":254400,"spd":"演示速率","kgday":2120},{"id":"D006","name":"演示拉丝机 06","type":"湿拉机","lo":0.22,"hi":1.8,"raw":282000,"spd":"演示速率","kgday":2350},{"id":"D007","name":"演示拉丝机 07","type":"湿拉机","lo":0.22,"hi":1.8,"raw":309600,"spd":"演示速率","kgday":2580},{"id":"D008","name":"演示拉丝机 08","type":"湿拉机","lo":0.22,"hi":1.8,"raw":337200,"spd":"演示速率","kgday":2810},{"id":"D009","name":"演示拉丝机 09","type":"湿拉机","lo":0.22,"hi":1.8,"raw":364800,"spd":"演示速率","kgday":3040},{"id":"D010","name":"演示拉丝机 10","type":"湿拉机","lo":0.22,"hi":1.8,"raw":392400,"spd":"演示速率","kgday":3270},{"id":"D011","name":"演示拉丝机 11","type":"湿拉机","lo":0.22,"hi":1.8,"raw":144000,"spd":"演示速率","kgday":1200},{"id":"D012","name":"演示拉丝机 12","type":"湿拉机","lo":0.22,"hi":1.8,"raw":171600,"spd":"演示速率","kgday":1430},{"id":"D013","name":"演示拉丝机 13","type":"湿拉机","lo":0.22,"hi":1.8,"raw":199200,"spd":"演示速率","kgday":1660},{"id":"D014","name":"演示拉丝机 14","type":"湿拉机","lo":0.22,"hi":1.8,"raw":226800,"spd":"演示速率","kgday":1890},{"id":"D015","name":"演示拉丝机 15","type":"湿拉机","lo":0.22,"hi":1.8,"raw":254400,"spd":"演示速率","kgday":2120},{"id":"D016","name":"演示拉丝机 16","type":"湿拉机","lo":0.22,"hi":1.8,"raw":282000,"spd":"演示速率","kgday":2350},{"id":"D017","name":"演示拉丝机 17","type":"湿拉机","lo":0.22,"hi":1.8,"raw":309600,"spd":"演示速率","kgday":2580},{"id":"D018","name":"演示拉丝机 18","type":"湿拉机","lo":0.22,"hi":1.8,"raw":337200,"spd":"演示速率","kgday":2810},{"id":"D019","name":"演示拉丝机 19","type":"湿拉机","lo":0.22,"hi":1.8,"raw":364800,"spd":"演示速率","kgday":3040},{"id":"D020","name":"演示拉丝机 20","type":"湿拉机","lo":0.22,"hi":1.8,"raw":392400,"spd":"演示速率","kgday":3270},{"id":"D021","name":"演示拉丝机 21","type":"湿拉机","lo":0.22,"hi":1.8,"raw":144000,"spd":"演示速率","kgday":1200},{"id":"D022","name":"演示拉丝机 22","type":"湿拉机","lo":0.22,"hi":1.8,"raw":171600,"spd":"演示速率","kgday":1430},{"id":"D023","name":"演示拉丝机 23","type":"湿拉机","lo":0.22,"hi":1.8,"raw":199200,"spd":"演示速率","kgday":1660},{"id":"D024","name":"演示拉丝机 24","type":"湿拉机","lo":0.22,"hi":1.8,"raw":226800,"spd":"演示速率","kgday":1890},{"id":"D025","name":"演示拉丝机 25","type":"湿拉机","lo":0.22,"hi":1.8,"raw":254400,"spd":"演示速率","kgday":2120},{"id":"D026","name":"演示拉丝机 26","type":"湿拉机","lo":0.22,"hi":1.8,"raw":282000,"spd":"演示速率","kgday":2350},{"id":"D027","name":"演示拉丝机 27","type":"湿拉机","lo":0.22,"hi":1.8,"raw":309600,"spd":"演示速率","kgday":2580},{"id":"D028","name":"演示拉丝机 28","type":"湿拉机","lo":0.22,"hi":1.8,"raw":337200,"spd":"演示速率","kgday":2810},{"id":"D029","name":"演示拉丝机 29","type":"干拉机","lo":1.0,"hi":5.0,"raw":364800,"spd":"演示速率","kgday":3040},{"id":"D030","name":"演示拉丝机 30","type":"干拉机","lo":1.0,"hi":5.0,"raw":392400,"spd":"演示速率","kgday":3270},{"id":"D031","name":"演示拉丝机 31","type":"干拉机","lo":1.0,"hi":5.0,"raw":144000,"spd":"演示速率","kgday":1200},{"id":"D032","name":"演示拉丝机 32","type":"干拉机","lo":1.0,"hi":5.0,"raw":171600,"spd":"演示速率","kgday":1430},{"id":"D033","name":"演示拉丝机 33","type":"干拉机","lo":1.0,"hi":5.0,"raw":199200,"spd":"演示速率","kgday":1660},{"id":"D034","name":"演示拉丝机 34","type":"干拉机","lo":1.0,"hi":5.0,"raw":226800,"spd":"演示速率","kgday":1890},{"id":"D035","name":"演示拉丝机 35","type":"干拉机","lo":1.0,"hi":5.0,"raw":254400,"spd":"演示速率","kgday":2120},{"id":"D036","name":"演示拉丝机 36","type":"干拉机","lo":1.0,"hi":5.0,"raw":282000,"spd":"演示速率","kgday":2350},{"id":"D037","name":"演示拉丝机 37","type":"干拉机","lo":1.0,"hi":5.0,"raw":309600,"spd":"演示速率","kgday":2580},{"id":"D038","name":"演示拉丝机 38","type":"干拉机","lo":1.0,"hi":5.0,"raw":337200,"spd":"演示速率","kgday":2810},{"id":"D039","name":"演示拉丝机 39","type":"干拉机","lo":1.0,"hi":5.0,"raw":364800,"spd":"演示速率","kgday":3040},{"id":"D040","name":"演示拉丝机 40","type":"干拉机","lo":1.0,"hi":5.0,"raw":392400,"spd":"演示速率","kgday":3270},{"id":"D041","name":"演示拉丝机 41","type":"干拉机","lo":1.0,"hi":5.0,"raw":144000,"spd":"演示速率","kgday":1200},{"id":"D042","name":"演示拉丝机 42","type":"干拉机","lo":1.0,"hi":5.0,"raw":171600,"spd":"演示速率","kgday":1430},{"id":"D043","name":"演示拉丝机 43","type":"干拉机","lo":1.0,"hi":5.0,"raw":199200,"spd":"演示速率","kgday":1660},{"id":"D044","name":"演示拉丝机 44","type":"干拉机","lo":1.0,"hi":5.0,"raw":226800,"spd":"演示速率","kgday":1890},{"id":"D045","name":"演示拉丝机 45","type":"干拉机","lo":1.0,"hi":5.0,"raw":254400,"spd":"演示速率","kgday":2120},{"id":"D046","name":"演示拉丝机 46","type":"干拉机","lo":1.0,"hi":5.0,"raw":282000,"spd":"演示速率","kgday":2350},{"id":"D047","name":"演示拉丝机 47","type":"干拉机","lo":1.0,"hi":5.0,"raw":309600,"spd":"演示速率","kgday":2580}],"twistFac":{"T001":0.65,"T002":0.74,"T003":0.83,"T004":0.92,"T005":1.01,"T006":1.1,"T007":1.19,"T008":1.28,"T009":1.37,"T010":1.46,"T011":1.55,"T012":1.64,"T013":0.65,"T014":0.74,"T015":0.83,"T016":0.92,"T017":1.01,"T018":1.1,"T019":1.19,"T020":1.28,"T021":1.37,"T022":1.46,"T023":1.55,"T024":1.64,"T025":0.65,"T026":0.74,"T027":0.83,"T028":0.92,"T029":1.01,"T030":1.1,"T031":1.19,"T032":1.28,"T033":1.37,"T034":1.46,"T035":1.55,"T036":1.64,"T037":0.65,"T038":0.74,"T039":0.83,"T040":0.92,"T041":1.01,"T042":1.1,"T043":1.19,"T044":1.28,"T045":1.37,"T046":1.46,"T047":1.55,"T048":1.64,"T049":0.65,"T050":0.74},"twistBase":{"0.1":817.3,"0.2":787.0,"0.3":758.9,"0.4":732.8,"0.5":708.3,"0.6":685.5,"0.7":664.1,"0.8":643.9,"0.9":625.0,"1.0":607.1,"1.1":590.3,"1.2":574.3,"1.3":559.2,"1.4":544.9,"1.5":531.2,"1.6":518.3,"1.7":506.0,"1.8":494.2,"1.9":483.0,"2.0":472.2,"2.1":462.0,"2.2":452.1,"2.3":442.7,"2.4":433.7,"2.5":425.0,"2.6":416.7,"2.7":408.7,"2.8":400.9,"2.9":393.5,"3.0":386.4,"3.1":379.5,"3.2":372.8,"3.3":366.4,"3.4":360.2,"3.5":354.2,"3.6":348.4,"3.7":342.7,"3.8":337.3,"3.9":332.0,"4.0":326.9,"4.1":322.0,"4.2":317.2,"4.3":312.5,"4.4":308.0,"4.5":303.6,"4.6":299.3,"4.7":295.1,"4.8":291.1,"4.9":287.2,"5.0":283.3,"5.1":279.6,"5.2":276.0,"5.3":272.4,"5.4":269.0,"5.5":265.6,"5.6":262.3,"5.7":259.1,"5.8":256.0,"5.9":253.0,"6.0":250.0,"6.1":247.1,"6.2":244.3,"6.3":241.5,"6.4":238.8,"6.5":236.1,"6.6":233.5,"6.7":231.0,"6.8":228.5,"6.9":226.1,"7.0":223.7,"7.1":221.4,"7.2":219.1,"7.3":216.8,"7.4":214.6,"7.5":212.5,"7.6":210.4,"7.7":208.3,"7.8":206.3,"7.9":204.3,"8.0":202.4},"twistName":{"0.1":"演示股径 0.1 mm","0.2":"演示股径 0.2 mm","0.3":"演示股径 0.3 mm","0.4":"演示股径 0.4 mm","0.5":"演示股径 0.5 mm","0.6":"演示股径 0.6 mm","0.7":"演示股径 0.7 mm","0.8":"演示股径 0.8 mm","0.9":"演示股径 0.9 mm","1.0":"演示股径 1.0 mm","1.1":"演示股径 1.1 mm","1.2":"演示股径 1.2 mm","1.3":"演示股径 1.3 mm","1.4":"演示股径 1.4 mm","1.5":"演示股径 1.5 mm","1.6":"演示股径 1.6 mm","1.7":"演示股径 1.7 mm","1.8":"演示股径 1.8 mm","1.9":"演示股径 1.9 mm","2.0":"演示股径 2.0 mm","2.1":"演示股径 2.1 mm","2.2":"演示股径 2.2 mm","2.3":"演示股径 2.3 mm","2.4":"演示股径 2.4 mm","2.5":"演示股径 2.5 mm","2.6":"演示股径 2.6 mm","2.7":"演示股径 2.7 mm","2.8":"演示股径 2.8 mm","2.9":"演示股径 2.9 mm","3.0":"演示股径 3.0 mm","3.1":"演示股径 3.1 mm","3.2":"演示股径 3.2 mm","3.3":"演示股径 3.3 mm","3.4":"演示股径 3.4 mm","3.5":"演示股径 3.5 mm","3.6":"演示股径 3.6 mm","3.7":"演示股径 3.7 mm","3.8":"演示股径 3.8 mm","3.9":"演示股径 3.9 mm","4.0":"演示股径 4.0 mm","4.1":"演示股径 4.1 mm","4.2":"演示股径 4.2 mm","4.3":"演示股径 4.3 mm","4.4":"演示股径 4.4 mm","4.5":"演示股径 4.5 mm","4.6":"演示股径 4.6 mm","4.7":"演示股径 4.7 mm","4.8":"演示股径 4.8 mm","4.9":"演示股径 4.9 mm","5.0":"演示股径 5.0 mm","5.1":"演示股径 5.1 mm","5.2":"演示股径 5.2 mm","5.3":"演示股径 5.3 mm","5.4":"演示股径 5.4 mm","5.5":"演示股径 5.5 mm","5.6":"演示股径 5.6 mm","5.7":"演示股径 5.7 mm","5.8":"演示股径 5.8 mm","5.9":"演示股径 5.9 mm","6.0":"演示股径 6.0 mm","6.1":"演示股径 6.1 mm","6.2":"演示股径 6.2 mm","6.3":"演示股径 6.3 mm","6.4":"演示股径 6.4 mm","6.5":"演示股径 6.5 mm","6.6":"演示股径 6.6 mm","6.7":"演示股径 6.7 mm","6.8":"演示股径 6.8 mm","6.9":"演示股径 6.9 mm","7.0":"演示股径 7.0 mm","7.1":"演示股径 7.1 mm","7.2":"演示股径 7.2 mm","7.3":"演示股径 7.3 mm","7.4":"演示股径 7.4 mm","7.5":"演示股径 7.5 mm","7.6":"演示股径 7.6 mm","7.7":"演示股径 7.7 mm","7.8":"演示股径 7.8 mm","7.9":"演示股径 7.9 mm","8.0":"演示股径 8.0 mm"},"ropeFac":{"R001":0.8,"R002":0.96,"R003":1.12,"R004":1.28,"R005":1.44,"R006":1.6,"R007":0.8,"R008":0.96,"R009":1.12,"R010":1.28,"R011":1.44,"R012":1.6},"ropeBase":{"10mm 6*19+FC":260.0,"10mm 6*36+IWRC":260.0,"10mm 8*K26WS+IWRC":260.0,"12mm 6*19+FC":216.7,"12mm 6*36+IWRC":216.7,"12mm 8*K26WS+IWRC":216.7,"16mm 6*19+FC":162.5,"16mm 6*36+IWRC":162.5,"16mm 8*K26WS+IWRC":162.5,"20mm 6*19+FC":130.0,"20mm 6*36+IWRC":130.0,"20mm 8*K26WS+IWRC":130.0,"24mm 6*19+FC":108.3,"24mm 6*36+IWRC":108.3,"24mm 8*K26WS+IWRC":108.3},"ropeName":{"10mm 6*19+FC":"通用演示工艺","10mm 6*36+IWRC":"通用演示工艺","10mm 8*K26WS+IWRC":"通用演示工艺","12mm 6*19+FC":"通用演示工艺","12mm 6*36+IWRC":"通用演示工艺","12mm 8*K26WS+IWRC":"通用演示工艺","16mm 6*19+FC":"通用演示工艺","16mm 6*36+IWRC":"通用演示工艺","16mm 8*K26WS+IWRC":"通用演示工艺","20mm 6*19+FC":"通用演示工艺","20mm 6*36+IWRC":"通用演示工艺","20mm 8*K26WS+IWRC":"通用演示工艺","24mm 6*19+FC":"通用演示工艺","24mm 6*36+IWRC":"通用演示工艺","24mm 8*K26WS+IWRC":"通用演示工艺"},"orders":[{"no":"DEMO-001","wo":"WO-001","od":"2026-10-12","due":"2026-10-19","pn":"演示光面钢丝绳 001","spec":"10mm 6*19+FC","coat":"演示涂油","qty":2900,"kg":986.0,"done":"未结束"},{"no":"DEMO-002","wo":"WO-002","od":"2026-10-13","due":"2026-10-21","pn":"演示光面钢丝绳 002","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":300,"kg":102.0,"done":"未结束"},{"no":"DEMO-003","wo":"WO-003","od":"2026-10-14","due":"2026-10-23","pn":"演示光面钢丝绳 003","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":5300,"kg":1802.0,"done":"未结束"},{"no":"DEMO-004","wo":"WO-004","od":"2026-10-15","due":"2026-10-25","pn":"演示光面钢丝绳 004","spec":"12mm 6*19+FC","coat":"演示涂油","qty":600,"kg":293.76,"done":"未结束"},{"no":"DEMO-005","wo":"WO-005","od":"2026-10-16","due":"2026-10-27","pn":"演示光面钢丝绳 005","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":300,"kg":146.88,"done":"未结束"},{"no":"DEMO-006","wo":"WO-006","od":"2026-10-17","due":"2026-10-29","pn":"演示光面钢丝绳 006","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":500,"kg":244.8,"done":"未结束"},{"no":"DEMO-007","wo":"WO-007","od":"2026-10-18","due":"2026-10-31","pn":"演示光面钢丝绳 007","spec":"16mm 6*19+FC","coat":"演示涂油","qty":3800,"kg":3307.52,"done":"未结束"},{"no":"DEMO-008","wo":"WO-008","od":"2026-10-19","due":"2026-11-02","pn":"演示光面钢丝绳 008","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":5500,"kg":4787.2,"done":"未结束"},{"no":"DEMO-009","wo":"WO-009","od":"2026-10-20","due":"2026-11-04","pn":"演示光面钢丝绳 009","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":5100,"kg":4439.04,"done":"未结束"},{"no":"DEMO-010","wo":"WO-010","od":"2026-10-21","due":"2026-11-06","pn":"演示光面钢丝绳 010","spec":"20mm 6*19+FC","coat":"演示涂油","qty":3600,"kg":4896.0,"done":"未结束"},{"no":"DEMO-011","wo":"WO-011","od":"2026-10-22","due":"2026-11-08","pn":"演示光面钢丝绳 011","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":4500,"kg":6120.0,"done":"未结束"},{"no":"DEMO-012","wo":"WO-012","od":"2026-10-23","due":"2026-11-10","pn":"演示光面钢丝绳 012","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":700,"kg":952.0,"done":"未结束"},{"no":"DEMO-013","wo":"WO-013","od":"2026-10-24","due":"2026-11-12","pn":"演示光面钢丝绳 013","spec":"24mm 6*19+FC","coat":"演示涂油","qty":1700,"kg":3329.28,"done":"未结束"},{"no":"DEMO-014","wo":"WO-014","od":"2026-10-25","due":"2026-11-14","pn":"演示光面钢丝绳 014","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":2800,"kg":5483.52,"done":"未结束"},{"no":"DEMO-015","wo":"WO-015","od":"2026-10-12","due":"2026-11-02","pn":"演示光面钢丝绳 015","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":600,"kg":1175.04,"done":"未结束"},{"no":"DEMO-016","wo":"WO-016","od":"2026-10-13","due":"2026-11-04","pn":"演示光面钢丝绳 016","spec":"10mm 6*19+FC","coat":"演示涂油","qty":1300,"kg":442.0,"done":"未结束"},{"no":"DEMO-017","wo":"WO-017","od":"2026-10-14","due":"2026-11-06","pn":"演示光面钢丝绳 017","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":1700,"kg":578.0,"done":"未结束"},{"no":"DEMO-018","wo":"WO-018","od":"2026-10-15","due":"2026-11-08","pn":"演示光面钢丝绳 018","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":3800,"kg":1292.0,"done":"未结束"},{"no":"DEMO-019","wo":"WO-019","od":"2026-10-16","due":"2026-10-23","pn":"演示光面钢丝绳 019","spec":"12mm 6*19+FC","coat":"演示涂油","qty":5900,"kg":2888.64,"done":"未结束"},{"no":"DEMO-020","wo":"WO-020","od":"2026-10-17","due":"2026-10-25","pn":"演示光面钢丝绳 020","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":5900,"kg":2888.64,"done":"未结束"},{"no":"DEMO-021","wo":"WO-021","od":"2026-10-18","due":"2026-10-27","pn":"演示光面钢丝绳 021","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":3800,"kg":1860.48,"done":"未结束"},{"no":"DEMO-022","wo":"WO-022","od":"2026-10-19","due":"2026-10-29","pn":"演示光面钢丝绳 022","spec":"16mm 6*19+FC","coat":"演示涂油","qty":1700,"kg":1479.68,"done":"未结束"},{"no":"DEMO-023","wo":"WO-023","od":"2026-10-20","due":"2026-10-31","pn":"演示光面钢丝绳 023","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":700,"kg":609.28,"done":"未结束"},{"no":"DEMO-024","wo":"WO-024","od":"2026-10-21","due":"2026-11-02","pn":"演示光面钢丝绳 024","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":4100,"kg":3568.64,"done":"未结束"},{"no":"DEMO-025","wo":"WO-025","od":"2026-10-22","due":"2026-11-04","pn":"演示光面钢丝绳 025","spec":"20mm 6*19+FC","coat":"演示涂油","qty":3700,"kg":5032.0,"done":"未结束"},{"no":"DEMO-026","wo":"WO-026","od":"2026-10-23","due":"2026-11-06","pn":"演示光面钢丝绳 026","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":4400,"kg":5984.0,"done":"未结束"},{"no":"DEMO-027","wo":"WO-027","od":"2026-10-24","due":"2026-11-08","pn":"演示光面钢丝绳 027","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":2300,"kg":3128.0,"done":"未结束"},{"no":"DEMO-028","wo":"WO-028","od":"2026-10-25","due":"2026-11-10","pn":"演示光面钢丝绳 028","spec":"24mm 6*19+FC","coat":"演示涂油","qty":3000,"kg":5875.2,"done":"未结束"},{"no":"DEMO-029","wo":"WO-029","od":"2026-10-12","due":"2026-10-29","pn":"演示光面钢丝绳 029","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":1000,"kg":1958.4,"done":"未结束"},{"no":"DEMO-030","wo":"WO-030","od":"2026-10-13","due":"2026-10-31","pn":"演示光面钢丝绳 030","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":5000,"kg":9792.0,"done":"未结束"},{"no":"DEMO-031","wo":"WO-031","od":"2026-10-14","due":"2026-11-02","pn":"演示光面钢丝绳 031","spec":"10mm 6*19+FC","coat":"演示涂油","qty":3700,"kg":1258.0,"done":"未结束"},{"no":"DEMO-032","wo":"WO-032","od":"2026-10-15","due":"2026-11-04","pn":"演示光面钢丝绳 032","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":1100,"kg":374.0,"done":"未结束"},{"no":"DEMO-033","wo":"WO-033","od":"2026-10-16","due":"2026-11-06","pn":"演示光面钢丝绳 033","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":800,"kg":272.0,"done":"未结束"},{"no":"DEMO-034","wo":"WO-034","od":"2026-10-17","due":"2026-11-08","pn":"演示光面钢丝绳 034","spec":"12mm 6*19+FC","coat":"演示涂油","qty":5900,"kg":2888.64,"done":"未结束"},{"no":"DEMO-035","wo":"WO-035","od":"2026-10-18","due":"2026-11-10","pn":"演示光面钢丝绳 035","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":2400,"kg":1175.04,"done":"未结束"},{"no":"DEMO-036","wo":"WO-036","od":"2026-10-19","due":"2026-11-12","pn":"演示光面钢丝绳 036","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":5700,"kg":2790.72,"done":"未结束"},{"no":"DEMO-037","wo":"WO-037","od":"2026-10-20","due":"2026-10-27","pn":"演示光面钢丝绳 037","spec":"16mm 6*19+FC","coat":"演示涂油","qty":2000,"kg":1740.8,"done":"未结束"},{"no":"DEMO-038","wo":"WO-038","od":"2026-10-21","due":"2026-10-29","pn":"演示光面钢丝绳 038","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":4100,"kg":3568.64,"done":"未结束"},{"no":"DEMO-039","wo":"WO-039","od":"2026-10-22","due":"2026-10-31","pn":"演示光面钢丝绳 039","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":3900,"kg":3394.56,"done":"未结束"},{"no":"DEMO-040","wo":"WO-040","od":"2026-10-23","due":"2026-11-02","pn":"演示光面钢丝绳 040","spec":"20mm 6*19+FC","coat":"演示涂油","qty":4800,"kg":6528.0,"done":"未结束"},{"no":"DEMO-041","wo":"WO-041","od":"2026-10-24","due":"2026-11-04","pn":"演示光面钢丝绳 041","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":4400,"kg":5984.0,"done":"未结束"},{"no":"DEMO-042","wo":"WO-042","od":"2026-10-25","due":"2026-11-06","pn":"演示光面钢丝绳 042","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":3100,"kg":4216.0,"done":"未结束"},{"no":"DEMO-043","wo":"WO-043","od":"2026-10-12","due":"2026-10-25","pn":"演示光面钢丝绳 043","spec":"24mm 6*19+FC","coat":"演示涂油","qty":4200,"kg":8225.28,"done":"未结束"},{"no":"DEMO-044","wo":"WO-044","od":"2026-10-13","due":"2026-10-27","pn":"演示光面钢丝绳 044","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":700,"kg":1370.88,"done":"未结束"},{"no":"DEMO-045","wo":"WO-045","od":"2026-10-14","due":"2026-10-29","pn":"演示光面钢丝绳 045","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":2100,"kg":4112.64,"done":"未结束"},{"no":"DEMO-046","wo":"WO-046","od":"2026-10-15","due":"2026-10-31","pn":"演示光面钢丝绳 046","spec":"10mm 6*19+FC","coat":"演示涂油","qty":4700,"kg":1598.0,"done":"未结束"},{"no":"DEMO-047","wo":"WO-047","od":"2026-10-16","due":"2026-11-02","pn":"演示光面钢丝绳 047","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":4900,"kg":1666.0,"done":"未结束"},{"no":"DEMO-048","wo":"WO-048","od":"2026-10-17","due":"2026-11-04","pn":"演示光面钢丝绳 048","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":900,"kg":306.0,"done":"未结束"},{"no":"DEMO-049","wo":"WO-049","od":"2026-10-18","due":"2026-11-06","pn":"演示光面钢丝绳 049","spec":"12mm 6*19+FC","coat":"演示涂油","qty":800,"kg":391.68,"done":"未结束"},{"no":"DEMO-050","wo":"WO-050","od":"2026-10-19","due":"2026-11-08","pn":"演示光面钢丝绳 050","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":2800,"kg":1370.88,"done":"未结束"},{"no":"DEMO-051","wo":"WO-051","od":"2026-10-20","due":"2026-11-10","pn":"演示光面钢丝绳 051","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":5600,"kg":2741.76,"done":"未结束"},{"no":"DEMO-052","wo":"WO-052","od":"2026-10-21","due":"2026-11-12","pn":"演示光面钢丝绳 052","spec":"16mm 6*19+FC","coat":"演示涂油","qty":3200,"kg":2785.28,"done":"未结束"},{"no":"DEMO-053","wo":"WO-053","od":"2026-10-22","due":"2026-11-14","pn":"演示光面钢丝绳 053","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":3800,"kg":3307.52,"done":"未结束"},{"no":"DEMO-054","wo":"WO-054","od":"2026-10-23","due":"2026-11-16","pn":"演示光面钢丝绳 054","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":5800,"kg":5048.32,"done":"未结束"},{"no":"DEMO-055","wo":"WO-055","od":"2026-10-24","due":"2026-10-31","pn":"演示光面钢丝绳 055","spec":"20mm 6*19+FC","coat":"演示涂油","qty":2400,"kg":3264.0,"done":"未结束"},{"no":"DEMO-056","wo":"WO-056","od":"2026-10-25","due":"2026-11-02","pn":"演示光面钢丝绳 056","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":700,"kg":952.0,"done":"未结束"},{"no":"DEMO-057","wo":"WO-057","od":"2026-10-12","due":"2026-10-21","pn":"演示光面钢丝绳 057","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":2100,"kg":2856.0,"done":"未结束"},{"no":"DEMO-058","wo":"WO-058","od":"2026-10-13","due":"2026-10-23","pn":"演示光面钢丝绳 058","spec":"24mm 6*19+FC","coat":"演示涂油","qty":4200,"kg":8225.28,"done":"未结束"},{"no":"DEMO-059","wo":"WO-059","od":"2026-10-14","due":"2026-10-25","pn":"演示光面钢丝绳 059","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":500,"kg":979.2,"done":"未结束"},{"no":"DEMO-060","wo":"WO-060","od":"2026-10-15","due":"2026-10-27","pn":"演示光面钢丝绳 060","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":300,"kg":587.52,"done":"未结束"},{"no":"DEMO-061","wo":"WO-061","od":"2026-10-16","due":"2026-10-29","pn":"演示光面钢丝绳 061","spec":"10mm 6*19+FC","coat":"演示涂油","qty":2100,"kg":714.0,"done":"未结束"},{"no":"DEMO-062","wo":"WO-062","od":"2026-10-17","due":"2026-10-31","pn":"演示光面钢丝绳 062","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":5000,"kg":1700.0,"done":"未结束"},{"no":"DEMO-063","wo":"WO-063","od":"2026-10-18","due":"2026-11-02","pn":"演示光面钢丝绳 063","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":1100,"kg":374.0,"done":"未结束"},{"no":"DEMO-064","wo":"WO-064","od":"2026-10-19","due":"2026-11-04","pn":"演示光面钢丝绳 064","spec":"12mm 6*19+FC","coat":"演示涂油","qty":2800,"kg":1370.88,"done":"未结束"},{"no":"DEMO-065","wo":"WO-065","od":"2026-10-20","due":"2026-11-06","pn":"演示光面钢丝绳 065","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":2300,"kg":1126.08,"done":"未结束"},{"no":"DEMO-066","wo":"WO-066","od":"2026-10-21","due":"2026-11-08","pn":"演示光面钢丝绳 066","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":3900,"kg":1909.44,"done":"未结束"},{"no":"DEMO-067","wo":"WO-067","od":"2026-10-22","due":"2026-11-10","pn":"演示光面钢丝绳 067","spec":"16mm 6*19+FC","coat":"演示涂油","qty":3600,"kg":3133.44,"done":"未结束"},{"no":"DEMO-068","wo":"WO-068","od":"2026-10-23","due":"2026-11-12","pn":"演示光面钢丝绳 068","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":1200,"kg":1044.48,"done":"未结束"},{"no":"DEMO-069","wo":"WO-069","od":"2026-10-24","due":"2026-11-14","pn":"演示光面钢丝绳 069","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":2900,"kg":2524.16,"done":"未结束"},{"no":"DEMO-070","wo":"WO-070","od":"2026-10-25","due":"2026-11-16","pn":"演示光面钢丝绳 070","spec":"20mm 6*19+FC","coat":"演示涂油","qty":3200,"kg":4352.0,"done":"未结束"},{"no":"DEMO-071","wo":"WO-071","od":"2026-10-12","due":"2026-11-04","pn":"演示光面钢丝绳 071","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":4800,"kg":6528.0,"done":"未结束"},{"no":"DEMO-072","wo":"WO-072","od":"2026-10-13","due":"2026-11-06","pn":"演示光面钢丝绳 072","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":700,"kg":952.0,"done":"未结束"},{"no":"DEMO-073","wo":"WO-073","od":"2026-10-14","due":"2026-10-21","pn":"演示光面钢丝绳 073","spec":"24mm 6*19+FC","coat":"演示涂油","qty":2100,"kg":4112.64,"done":"未结束"},{"no":"DEMO-074","wo":"WO-074","od":"2026-10-15","due":"2026-10-23","pn":"演示光面钢丝绳 074","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":5600,"kg":10967.04,"done":"未结束"},{"no":"DEMO-075","wo":"WO-075","od":"2026-10-16","due":"2026-10-25","pn":"演示光面钢丝绳 075","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":3500,"kg":6854.4,"done":"未结束"},{"no":"DEMO-076","wo":"WO-076","od":"2026-10-17","due":"2026-10-27","pn":"演示光面钢丝绳 076","spec":"10mm 6*19+FC","coat":"演示涂油","qty":500,"kg":170.0,"done":"未结束"},{"no":"DEMO-077","wo":"WO-077","od":"2026-10-18","due":"2026-10-29","pn":"演示光面钢丝绳 077","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":5900,"kg":2006.0,"done":"未结束"},{"no":"DEMO-078","wo":"WO-078","od":"2026-10-19","due":"2026-10-31","pn":"演示光面钢丝绳 078","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":2800,"kg":952.0,"done":"未结束"},{"no":"DEMO-079","wo":"WO-079","od":"2026-10-20","due":"2026-11-02","pn":"演示光面钢丝绳 079","spec":"12mm 6*19+FC","coat":"演示涂油","qty":3600,"kg":1762.56,"done":"未结束"},{"no":"DEMO-080","wo":"WO-080","od":"2026-10-21","due":"2026-11-04","pn":"演示光面钢丝绳 080","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":1900,"kg":930.24,"done":"未结束"},{"no":"DEMO-081","wo":"WO-081","od":"2026-10-22","due":"2026-11-06","pn":"演示光面钢丝绳 081","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":4700,"kg":2301.12,"done":"未结束"},{"no":"DEMO-082","wo":"WO-082","od":"2026-10-23","due":"2026-11-08","pn":"演示光面钢丝绳 082","spec":"16mm 6*19+FC","coat":"演示涂油","qty":800,"kg":696.32,"done":"未结束"},{"no":"DEMO-083","wo":"WO-083","od":"2026-10-24","due":"2026-11-10","pn":"演示光面钢丝绳 083","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":1700,"kg":1479.68,"done":"未结束"},{"no":"DEMO-084","wo":"WO-084","od":"2026-10-25","due":"2026-11-12","pn":"演示光面钢丝绳 084","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":2300,"kg":2001.92,"done":"未结束"},{"no":"DEMO-085","wo":"WO-085","od":"2026-10-12","due":"2026-10-31","pn":"演示光面钢丝绳 085","spec":"20mm 6*19+FC","coat":"演示涂油","qty":1500,"kg":2040.0,"done":"未结束"},{"no":"DEMO-086","wo":"WO-086","od":"2026-10-13","due":"2026-11-02","pn":"演示光面钢丝绳 086","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":5500,"kg":7480.0,"done":"未结束"},{"no":"DEMO-087","wo":"WO-087","od":"2026-10-14","due":"2026-11-04","pn":"演示光面钢丝绳 087","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":5300,"kg":7208.0,"done":"未结束"},{"no":"DEMO-088","wo":"WO-088","od":"2026-10-15","due":"2026-11-06","pn":"演示光面钢丝绳 088","spec":"24mm 6*19+FC","coat":"演示涂油","qty":600,"kg":1175.04,"done":"未结束"},{"no":"DEMO-089","wo":"WO-089","od":"2026-10-16","due":"2026-11-08","pn":"演示光面钢丝绳 089","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":900,"kg":1762.56,"done":"未结束"},{"no":"DEMO-090","wo":"WO-090","od":"2026-10-17","due":"2026-11-10","pn":"演示光面钢丝绳 090","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":2600,"kg":5091.84,"done":"未结束"},{"no":"DEMO-091","wo":"WO-091","od":"2026-10-18","due":"2026-10-25","pn":"演示光面钢丝绳 091","spec":"10mm 6*19+FC","coat":"演示涂油","qty":3000,"kg":1020.0,"done":"未结束"},{"no":"DEMO-092","wo":"WO-092","od":"2026-10-19","due":"2026-10-27","pn":"演示光面钢丝绳 092","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":3600,"kg":1224.0,"done":"未结束"},{"no":"DEMO-093","wo":"WO-093","od":"2026-10-20","due":"2026-10-29","pn":"演示光面钢丝绳 093","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":500,"kg":170.0,"done":"未结束"},{"no":"DEMO-094","wo":"WO-094","od":"2026-10-21","due":"2026-10-31","pn":"演示光面钢丝绳 094","spec":"12mm 6*19+FC","coat":"演示涂油","qty":4800,"kg":2350.08,"done":"未结束"},{"no":"DEMO-095","wo":"WO-095","od":"2026-10-22","due":"2026-11-02","pn":"演示光面钢丝绳 095","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":3300,"kg":1615.68,"done":"未结束"},{"no":"DEMO-096","wo":"WO-096","od":"2026-10-23","due":"2026-11-04","pn":"演示光面钢丝绳 096","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":1400,"kg":685.44,"done":"未结束"},{"no":"DEMO-097","wo":"WO-097","od":"2026-10-24","due":"2026-11-06","pn":"演示光面钢丝绳 097","spec":"16mm 6*19+FC","coat":"演示涂油","qty":2400,"kg":2088.96,"done":"未结束"},{"no":"DEMO-098","wo":"WO-098","od":"2026-10-25","due":"2026-11-08","pn":"演示光面钢丝绳 098","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":5800,"kg":5048.32,"done":"未结束"},{"no":"DEMO-099","wo":"WO-099","od":"2026-10-12","due":"2026-10-27","pn":"演示光面钢丝绳 099","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":2900,"kg":2524.16,"done":"未结束"},{"no":"DEMO-100","wo":"WO-100","od":"2026-10-13","due":"2026-10-29","pn":"演示光面钢丝绳 100","spec":"20mm 6*19+FC","coat":"演示涂油","qty":1300,"kg":1768.0,"done":"未结束"},{"no":"DEMO-101","wo":"WO-101","od":"2026-10-14","due":"2026-10-31","pn":"演示光面钢丝绳 101","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":4900,"kg":6664.0,"done":"未结束"},{"no":"DEMO-102","wo":"WO-102","od":"2026-10-15","due":"2026-11-02","pn":"演示光面钢丝绳 102","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":3300,"kg":4488.0,"done":"未结束"},{"no":"DEMO-103","wo":"WO-103","od":"2026-10-16","due":"2026-11-04","pn":"演示光面钢丝绳 103","spec":"24mm 6*19+FC","coat":"演示涂油","qty":3300,"kg":6462.72,"done":"未结束"},{"no":"DEMO-104","wo":"WO-104","od":"2026-10-17","due":"2026-11-06","pn":"演示光面钢丝绳 104","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":5600,"kg":10967.04,"done":"未结束"},{"no":"DEMO-105","wo":"WO-105","od":"2026-10-18","due":"2026-11-08","pn":"演示光面钢丝绳 105","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":1500,"kg":2937.6,"done":"未结束"},{"no":"DEMO-106","wo":"WO-106","od":"2026-10-19","due":"2026-11-10","pn":"演示光面钢丝绳 106","spec":"10mm 6*19+FC","coat":"演示涂油","qty":4100,"kg":1394.0,"done":"未结束"},{"no":"DEMO-107","wo":"WO-107","od":"2026-10-20","due":"2026-11-12","pn":"演示光面钢丝绳 107","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":800,"kg":272.0,"done":"未结束"},{"no":"DEMO-108","wo":"WO-108","od":"2026-10-21","due":"2026-11-14","pn":"演示光面钢丝绳 108","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":2700,"kg":918.0,"done":"未结束"},{"no":"DEMO-109","wo":"WO-109","od":"2026-10-22","due":"2026-10-29","pn":"演示光面钢丝绳 109","spec":"12mm 6*19+FC","coat":"演示涂油","qty":800,"kg":391.68,"done":"未结束"},{"no":"DEMO-110","wo":"WO-110","od":"2026-10-23","due":"2026-10-31","pn":"演示光面钢丝绳 110","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":4000,"kg":1958.4,"done":"未结束"},{"no":"DEMO-111","wo":"WO-111","od":"2026-10-24","due":"2026-11-02","pn":"演示光面钢丝绳 111","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":3500,"kg":1713.6,"done":"未结束"},{"no":"DEMO-112","wo":"WO-112","od":"2026-10-25","due":"2026-11-04","pn":"演示光面钢丝绳 112","spec":"16mm 6*19+FC","coat":"演示涂油","qty":800,"kg":696.32,"done":"未结束"},{"no":"DEMO-113","wo":"WO-113","od":"2026-10-12","due":"2026-10-23","pn":"演示光面钢丝绳 113","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":400,"kg":348.16,"done":"未结束"},{"no":"DEMO-114","wo":"WO-114","od":"2026-10-13","due":"2026-10-25","pn":"演示光面钢丝绳 114","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":2300,"kg":2001.92,"done":"未结束"},{"no":"DEMO-115","wo":"WO-115","od":"2026-10-14","due":"2026-10-27","pn":"演示光面钢丝绳 115","spec":"20mm 6*19+FC","coat":"演示涂油","qty":5700,"kg":7752.0,"done":"未结束"},{"no":"DEMO-116","wo":"WO-116","od":"2026-10-15","due":"2026-10-29","pn":"演示光面钢丝绳 116","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":1300,"kg":1768.0,"done":"未结束"},{"no":"DEMO-117","wo":"WO-117","od":"2026-10-16","due":"2026-10-31","pn":"演示光面钢丝绳 117","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":1700,"kg":2312.0,"done":"未结束"},{"no":"DEMO-118","wo":"WO-118","od":"2026-10-17","due":"2026-11-02","pn":"演示光面钢丝绳 118","spec":"24mm 6*19+FC","coat":"演示涂油","qty":1200,"kg":2350.08,"done":"未结束"},{"no":"DEMO-119","wo":"WO-119","od":"2026-10-18","due":"2026-11-04","pn":"演示光面钢丝绳 119","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":1900,"kg":3720.96,"done":"未结束"},{"no":"DEMO-120","wo":"WO-120","od":"2026-10-19","due":"2026-11-06","pn":"演示光面钢丝绳 120","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":3300,"kg":6462.72,"done":"未结束"},{"no":"DEMO-121","wo":"WO-121","od":"2026-10-20","due":"2026-11-08","pn":"演示光面钢丝绳 121","spec":"10mm 6*19+FC","coat":"演示涂油","qty":3200,"kg":1088.0,"done":"未结束"},{"no":"DEMO-122","wo":"WO-122","od":"2026-10-21","due":"2026-11-10","pn":"演示光面钢丝绳 122","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":1900,"kg":646.0,"done":"未结束"},{"no":"DEMO-123","wo":"WO-123","od":"2026-10-22","due":"2026-11-12","pn":"演示光面钢丝绳 123","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":400,"kg":136.0,"done":"未结束"},{"no":"DEMO-124","wo":"WO-124","od":"2026-10-23","due":"2026-11-14","pn":"演示光面钢丝绳 124","spec":"12mm 6*19+FC","coat":"演示涂油","qty":5000,"kg":2448.0,"done":"未结束"},{"no":"DEMO-125","wo":"WO-125","od":"2026-10-24","due":"2026-11-16","pn":"演示光面钢丝绳 125","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":1200,"kg":587.52,"done":"未结束"},{"no":"DEMO-126","wo":"WO-126","od":"2026-10-25","due":"2026-11-18","pn":"演示光面钢丝绳 126","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":1700,"kg":832.32,"done":"未结束"},{"no":"DEMO-127","wo":"WO-127","od":"2026-10-12","due":"2026-10-19","pn":"演示光面钢丝绳 127","spec":"16mm 6*19+FC","coat":"演示涂油","qty":5500,"kg":4787.2,"done":"未结束"},{"no":"DEMO-128","wo":"WO-128","od":"2026-10-13","due":"2026-10-21","pn":"演示光面钢丝绳 128","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":3000,"kg":2611.2,"done":"未结束"},{"no":"DEMO-129","wo":"WO-129","od":"2026-10-14","due":"2026-10-23","pn":"演示光面钢丝绳 129","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":400,"kg":348.16,"done":"未结束"},{"no":"DEMO-130","wo":"WO-130","od":"2026-10-15","due":"2026-10-25","pn":"演示光面钢丝绳 130","spec":"20mm 6*19+FC","coat":"演示涂油","qty":3200,"kg":4352.0,"done":"未结束"},{"no":"DEMO-131","wo":"WO-131","od":"2026-10-16","due":"2026-10-27","pn":"演示光面钢丝绳 131","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":4000,"kg":5440.0,"done":"未结束"},{"no":"DEMO-132","wo":"WO-132","od":"2026-10-17","due":"2026-10-29","pn":"演示光面钢丝绳 132","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":300,"kg":408.0,"done":"未结束"},{"no":"DEMO-133","wo":"WO-133","od":"2026-10-18","due":"2026-10-31","pn":"演示光面钢丝绳 133","spec":"24mm 6*19+FC","coat":"演示涂油","qty":1700,"kg":3329.28,"done":"未结束"},{"no":"DEMO-134","wo":"WO-134","od":"2026-10-19","due":"2026-11-02","pn":"演示光面钢丝绳 134","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":5100,"kg":9987.84,"done":"未结束"},{"no":"DEMO-135","wo":"WO-135","od":"2026-10-20","due":"2026-11-04","pn":"演示光面钢丝绳 135","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":4900,"kg":9596.16,"done":"未结束"},{"no":"DEMO-136","wo":"WO-136","od":"2026-10-21","due":"2026-11-06","pn":"演示光面钢丝绳 136","spec":"10mm 6*19+FC","coat":"演示涂油","qty":5200,"kg":1768.0,"done":"未结束"},{"no":"DEMO-137","wo":"WO-137","od":"2026-10-22","due":"2026-11-08","pn":"演示光面钢丝绳 137","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":1000,"kg":340.0,"done":"未结束"},{"no":"DEMO-138","wo":"WO-138","od":"2026-10-23","due":"2026-11-10","pn":"演示光面钢丝绳 138","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":5400,"kg":1836.0,"done":"未结束"},{"no":"DEMO-139","wo":"WO-139","od":"2026-10-24","due":"2026-11-12","pn":"演示光面钢丝绳 139","spec":"12mm 6*19+FC","coat":"演示涂油","qty":600,"kg":293.76,"done":"未结束"},{"no":"DEMO-140","wo":"WO-140","od":"2026-10-25","due":"2026-11-14","pn":"演示光面钢丝绳 140","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":1300,"kg":636.48,"done":"未结束"},{"no":"DEMO-141","wo":"WO-141","od":"2026-10-12","due":"2026-11-02","pn":"演示光面钢丝绳 141","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":400,"kg":195.84,"done":"未结束"},{"no":"DEMO-142","wo":"WO-142","od":"2026-10-13","due":"2026-11-04","pn":"演示光面钢丝绳 142","spec":"16mm 6*19+FC","coat":"演示涂油","qty":1100,"kg":957.44,"done":"未结束"},{"no":"DEMO-143","wo":"WO-143","od":"2026-10-14","due":"2026-11-06","pn":"演示光面钢丝绳 143","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":1500,"kg":1305.6,"done":"未结束"},{"no":"DEMO-144","wo":"WO-144","od":"2026-10-15","due":"2026-11-08","pn":"演示光面钢丝绳 144","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":5100,"kg":4439.04,"done":"未结束"},{"no":"DEMO-145","wo":"WO-145","od":"2026-10-16","due":"2026-10-23","pn":"演示光面钢丝绳 145","spec":"20mm 6*19+FC","coat":"演示涂油","qty":5500,"kg":7480.0,"done":"未结束"},{"no":"DEMO-146","wo":"WO-146","od":"2026-10-17","due":"2026-10-25","pn":"演示光面钢丝绳 146","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":5200,"kg":7072.0,"done":"未结束"},{"no":"DEMO-147","wo":"WO-147","od":"2026-10-18","due":"2026-10-27","pn":"演示光面钢丝绳 147","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":2900,"kg":3944.0,"done":"未结束"},{"no":"DEMO-148","wo":"WO-148","od":"2026-10-19","due":"2026-10-29","pn":"演示光面钢丝绳 148","spec":"24mm 6*19+FC","coat":"演示涂油","qty":1400,"kg":2741.76,"done":"未结束"},{"no":"DEMO-149","wo":"WO-149","od":"2026-10-20","due":"2026-10-31","pn":"演示光面钢丝绳 149","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":3400,"kg":6658.56,"done":"未结束"},{"no":"DEMO-150","wo":"WO-150","od":"2026-10-21","due":"2026-11-02","pn":"演示光面钢丝绳 150","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":300,"kg":587.52,"done":"未结束"},{"no":"DEMO-151","wo":"WO-151","od":"2026-10-22","due":"2026-11-04","pn":"演示光面钢丝绳 151","spec":"10mm 6*19+FC","coat":"演示涂油","qty":1500,"kg":510.0,"done":"未结束"},{"no":"DEMO-152","wo":"WO-152","od":"2026-10-23","due":"2026-11-06","pn":"演示光面钢丝绳 152","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":4200,"kg":1428.0,"done":"未结束"},{"no":"DEMO-153","wo":"WO-153","od":"2026-10-24","due":"2026-11-08","pn":"演示光面钢丝绳 153","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":3800,"kg":1292.0,"done":"未结束"},{"no":"DEMO-154","wo":"WO-154","od":"2026-10-25","due":"2026-11-10","pn":"演示光面钢丝绳 154","spec":"12mm 6*19+FC","coat":"演示涂油","qty":4000,"kg":1958.4,"done":"未结束"},{"no":"DEMO-155","wo":"WO-155","od":"2026-10-12","due":"2026-10-29","pn":"演示光面钢丝绳 155","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":2200,"kg":1077.12,"done":"未结束"},{"no":"DEMO-156","wo":"WO-156","od":"2026-10-13","due":"2026-10-31","pn":"演示光面钢丝绳 156","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":1400,"kg":685.44,"done":"未结束"},{"no":"DEMO-157","wo":"WO-157","od":"2026-10-14","due":"2026-11-02","pn":"演示光面钢丝绳 157","spec":"16mm 6*19+FC","coat":"演示涂油","qty":5000,"kg":4352.0,"done":"未结束"},{"no":"DEMO-158","wo":"WO-158","od":"2026-10-15","due":"2026-11-04","pn":"演示光面钢丝绳 158","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":4500,"kg":3916.8,"done":"未结束"},{"no":"DEMO-159","wo":"WO-159","od":"2026-10-16","due":"2026-11-06","pn":"演示光面钢丝绳 159","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":1700,"kg":1479.68,"done":"未结束"},{"no":"DEMO-160","wo":"WO-160","od":"2026-10-17","due":"2026-11-08","pn":"演示光面钢丝绳 160","spec":"20mm 6*19+FC","coat":"演示涂油","qty":4100,"kg":5576.0,"done":"未结束"},{"no":"DEMO-161","wo":"WO-161","od":"2026-10-18","due":"2026-11-10","pn":"演示光面钢丝绳 161","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":4800,"kg":6528.0,"done":"未结束"},{"no":"DEMO-162","wo":"WO-162","od":"2026-10-19","due":"2026-11-12","pn":"演示光面钢丝绳 162","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":5500,"kg":7480.0,"done":"未结束"},{"no":"DEMO-163","wo":"WO-163","od":"2026-10-20","due":"2026-10-27","pn":"演示光面钢丝绳 163","spec":"24mm 6*19+FC","coat":"演示涂油","qty":5600,"kg":10967.04,"done":"未结束"},{"no":"DEMO-164","wo":"WO-164","od":"2026-10-21","due":"2026-10-29","pn":"演示光面钢丝绳 164","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":3600,"kg":7050.24,"done":"未结束"},{"no":"DEMO-165","wo":"WO-165","od":"2026-10-22","due":"2026-10-31","pn":"演示光面钢丝绳 165","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":3000,"kg":5875.2,"done":"未结束"},{"no":"DEMO-166","wo":"WO-166","od":"2026-10-23","due":"2026-11-02","pn":"演示光面钢丝绳 166","spec":"10mm 6*19+FC","coat":"演示涂油","qty":1900,"kg":646.0,"done":"未结束"},{"no":"DEMO-167","wo":"WO-167","od":"2026-10-24","due":"2026-11-04","pn":"演示光面钢丝绳 167","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":2600,"kg":884.0,"done":"未结束"},{"no":"DEMO-168","wo":"WO-168","od":"2026-10-25","due":"2026-11-06","pn":"演示光面钢丝绳 168","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":5900,"kg":2006.0,"done":"未结束"},{"no":"DEMO-169","wo":"WO-169","od":"2026-10-12","due":"2026-10-25","pn":"演示光面钢丝绳 169","spec":"12mm 6*19+FC","coat":"演示涂油","qty":3100,"kg":1517.76,"done":"未结束"},{"no":"DEMO-170","wo":"WO-170","od":"2026-10-13","due":"2026-10-27","pn":"演示光面钢丝绳 170","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":1200,"kg":587.52,"done":"未结束"},{"no":"DEMO-171","wo":"WO-171","od":"2026-10-14","due":"2026-10-29","pn":"演示光面钢丝绳 171","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":3800,"kg":1860.48,"done":"未结束"},{"no":"DEMO-172","wo":"WO-172","od":"2026-10-15","due":"2026-10-31","pn":"演示光面钢丝绳 172","spec":"16mm 6*19+FC","coat":"演示涂油","qty":2400,"kg":2088.96,"done":"未结束"},{"no":"DEMO-173","wo":"WO-173","od":"2026-10-16","due":"2026-11-02","pn":"演示光面钢丝绳 173","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":300,"kg":261.12,"done":"未结束"},{"no":"DEMO-174","wo":"WO-174","od":"2026-10-17","due":"2026-11-04","pn":"演示光面钢丝绳 174","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":900,"kg":783.36,"done":"未结束"},{"no":"DEMO-175","wo":"WO-175","od":"2026-10-18","due":"2026-11-06","pn":"演示光面钢丝绳 175","spec":"20mm 6*19+FC","coat":"演示涂油","qty":1500,"kg":2040.0,"done":"未结束"},{"no":"DEMO-176","wo":"WO-176","od":"2026-10-19","due":"2026-11-08","pn":"演示光面钢丝绳 176","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":5300,"kg":7208.0,"done":"未结束"},{"no":"DEMO-177","wo":"WO-177","od":"2026-10-20","due":"2026-11-10","pn":"演示光面钢丝绳 177","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":400,"kg":544.0,"done":"未结束"},{"no":"DEMO-178","wo":"WO-178","od":"2026-10-21","due":"2026-11-12","pn":"演示光面钢丝绳 178","spec":"24mm 6*19+FC","coat":"演示涂油","qty":4000,"kg":7833.6,"done":"未结束"},{"no":"DEMO-179","wo":"WO-179","od":"2026-10-22","due":"2026-11-14","pn":"演示光面钢丝绳 179","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":1600,"kg":3133.44,"done":"未结束"},{"no":"DEMO-180","wo":"WO-180","od":"2026-10-23","due":"2026-11-16","pn":"演示光面钢丝绳 180","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":5400,"kg":10575.36,"done":"未结束"},{"no":"DEMO-181","wo":"WO-181","od":"2026-10-24","due":"2026-10-31","pn":"演示光面钢丝绳 181","spec":"10mm 6*19+FC","coat":"演示涂油","qty":3000,"kg":1020.0,"done":"未结束"},{"no":"DEMO-182","wo":"WO-182","od":"2026-10-25","due":"2026-11-02","pn":"演示光面钢丝绳 182","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":4600,"kg":1564.0,"done":"未结束"},{"no":"DEMO-183","wo":"WO-183","od":"2026-10-12","due":"2026-10-21","pn":"演示光面钢丝绳 183","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":3700,"kg":1258.0,"done":"未结束"},{"no":"DEMO-184","wo":"WO-184","od":"2026-10-13","due":"2026-10-23","pn":"演示光面钢丝绳 184","spec":"12mm 6*19+FC","coat":"演示涂油","qty":5200,"kg":2545.92,"done":"未结束"},{"no":"DEMO-185","wo":"WO-185","od":"2026-10-14","due":"2026-10-25","pn":"演示光面钢丝绳 185","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":3100,"kg":1517.76,"done":"未结束"},{"no":"DEMO-186","wo":"WO-186","od":"2026-10-15","due":"2026-10-27","pn":"演示光面钢丝绳 186","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":5500,"kg":2692.8,"done":"未结束"},{"no":"DEMO-187","wo":"WO-187","od":"2026-10-16","due":"2026-10-29","pn":"演示光面钢丝绳 187","spec":"16mm 6*19+FC","coat":"演示涂油","qty":1300,"kg":1131.52,"done":"未结束"},{"no":"DEMO-188","wo":"WO-188","od":"2026-10-17","due":"2026-10-31","pn":"演示光面钢丝绳 188","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":2300,"kg":2001.92,"done":"未结束"},{"no":"DEMO-189","wo":"WO-189","od":"2026-10-18","due":"2026-11-02","pn":"演示光面钢丝绳 189","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":3900,"kg":3394.56,"done":"未结束"},{"no":"DEMO-190","wo":"WO-190","od":"2026-10-19","due":"2026-11-04","pn":"演示光面钢丝绳 190","spec":"20mm 6*19+FC","coat":"演示涂油","qty":5000,"kg":6800.0,"done":"未结束"},{"no":"DEMO-191","wo":"WO-191","od":"2026-10-20","due":"2026-11-06","pn":"演示光面钢丝绳 191","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":2900,"kg":3944.0,"done":"未结束"},{"no":"DEMO-192","wo":"WO-192","od":"2026-10-21","due":"2026-11-08","pn":"演示光面钢丝绳 192","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":3200,"kg":4352.0,"done":"未结束"},{"no":"DEMO-193","wo":"WO-193","od":"2026-10-22","due":"2026-11-10","pn":"演示光面钢丝绳 193","spec":"24mm 6*19+FC","coat":"演示涂油","qty":3100,"kg":6071.04,"done":"未结束"},{"no":"DEMO-194","wo":"WO-194","od":"2026-10-23","due":"2026-11-12","pn":"演示光面钢丝绳 194","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":4600,"kg":9008.64,"done":"未结束"},{"no":"DEMO-195","wo":"WO-195","od":"2026-10-24","due":"2026-11-14","pn":"演示光面钢丝绳 195","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":4000,"kg":7833.6,"done":"未结束"},{"no":"DEMO-196","wo":"WO-196","od":"2026-10-25","due":"2026-11-16","pn":"演示光面钢丝绳 196","spec":"10mm 6*19+FC","coat":"演示涂油","qty":5700,"kg":1938.0,"done":"未结束"},{"no":"DEMO-197","wo":"WO-197","od":"2026-10-12","due":"2026-11-04","pn":"演示光面钢丝绳 197","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":2300,"kg":782.0,"done":"未结束"},{"no":"DEMO-198","wo":"WO-198","od":"2026-10-13","due":"2026-11-06","pn":"演示光面钢丝绳 198","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":2800,"kg":952.0,"done":"未结束"},{"no":"DEMO-199","wo":"WO-199","od":"2026-10-14","due":"2026-10-21","pn":"演示光面钢丝绳 199","spec":"12mm 6*19+FC","coat":"演示涂油","qty":500,"kg":244.8,"done":"未结束"},{"no":"DEMO-200","wo":"WO-200","od":"2026-10-15","due":"2026-10-23","pn":"演示光面钢丝绳 200","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":2400,"kg":1175.04,"done":"未结束"},{"no":"DEMO-201","wo":"WO-201","od":"2026-10-16","due":"2026-10-25","pn":"演示光面钢丝绳 201","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":5800,"kg":2839.68,"done":"未结束"},{"no":"DEMO-202","wo":"WO-202","od":"2026-10-17","due":"2026-10-27","pn":"演示光面钢丝绳 202","spec":"16mm 6*19+FC","coat":"演示涂油","qty":1100,"kg":957.44,"done":"未结束"},{"no":"DEMO-203","wo":"WO-203","od":"2026-10-18","due":"2026-10-29","pn":"演示光面钢丝绳 203","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":4600,"kg":4003.84,"done":"未结束"},{"no":"DEMO-204","wo":"WO-204","od":"2026-10-19","due":"2026-10-31","pn":"演示光面钢丝绳 204","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":900,"kg":783.36,"done":"未结束"},{"no":"DEMO-205","wo":"WO-205","od":"2026-10-20","due":"2026-11-02","pn":"演示光面钢丝绳 205","spec":"20mm 6*19+FC","coat":"演示涂油","qty":3000,"kg":4080.0,"done":"未结束"},{"no":"DEMO-206","wo":"WO-206","od":"2026-10-21","due":"2026-11-04","pn":"演示光面钢丝绳 206","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":1300,"kg":1768.0,"done":"未结束"},{"no":"DEMO-207","wo":"WO-207","od":"2026-10-22","due":"2026-11-06","pn":"演示光面钢丝绳 207","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":5700,"kg":7752.0,"done":"未结束"},{"no":"DEMO-208","wo":"WO-208","od":"2026-10-23","due":"2026-11-08","pn":"演示光面钢丝绳 208","spec":"24mm 6*19+FC","coat":"演示涂油","qty":1700,"kg":3329.28,"done":"未结束"},{"no":"DEMO-209","wo":"WO-209","od":"2026-10-24","due":"2026-11-10","pn":"演示光面钢丝绳 209","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":5700,"kg":11162.88,"done":"未结束"},{"no":"DEMO-210","wo":"WO-210","od":"2026-10-25","due":"2026-11-12","pn":"演示光面钢丝绳 210","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":3200,"kg":6266.88,"done":"未结束"},{"no":"DEMO-211","wo":"WO-211","od":"2026-10-12","due":"2026-10-31","pn":"演示光面钢丝绳 211","spec":"10mm 6*19+FC","coat":"演示涂油","qty":400,"kg":136.0,"done":"未结束"},{"no":"DEMO-212","wo":"WO-212","od":"2026-10-13","due":"2026-11-02","pn":"演示光面钢丝绳 212","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":5000,"kg":1700.0,"done":"未结束"},{"no":"DEMO-213","wo":"WO-213","od":"2026-10-14","due":"2026-11-04","pn":"演示光面钢丝绳 213","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":1000,"kg":340.0,"done":"未结束"},{"no":"DEMO-214","wo":"WO-214","od":"2026-10-15","due":"2026-11-06","pn":"演示光面钢丝绳 214","spec":"12mm 6*19+FC","coat":"演示涂油","qty":3500,"kg":1713.6,"done":"未结束"},{"no":"DEMO-215","wo":"WO-215","od":"2026-10-16","due":"2026-11-08","pn":"演示光面钢丝绳 215","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":2800,"kg":1370.88,"done":"未结束"},{"no":"DEMO-216","wo":"WO-216","od":"2026-10-17","due":"2026-11-10","pn":"演示光面钢丝绳 216","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":800,"kg":391.68,"done":"未结束"},{"no":"DEMO-217","wo":"WO-217","od":"2026-10-18","due":"2026-10-25","pn":"演示光面钢丝绳 217","spec":"16mm 6*19+FC","coat":"演示涂油","qty":5100,"kg":4439.04,"done":"未结束"},{"no":"DEMO-218","wo":"WO-218","od":"2026-10-19","due":"2026-10-27","pn":"演示光面钢丝绳 218","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":2800,"kg":2437.12,"done":"未结束"},{"no":"DEMO-219","wo":"WO-219","od":"2026-10-20","due":"2026-10-29","pn":"演示光面钢丝绳 219","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":1500,"kg":1305.6,"done":"未结束"},{"no":"DEMO-220","wo":"WO-220","od":"2026-10-21","due":"2026-10-31","pn":"演示光面钢丝绳 220","spec":"20mm 6*19+FC","coat":"演示涂油","qty":900,"kg":1224.0,"done":"未结束"},{"no":"DEMO-221","wo":"WO-221","od":"2026-10-22","due":"2026-11-02","pn":"演示光面钢丝绳 221","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":800,"kg":1088.0,"done":"未结束"},{"no":"DEMO-222","wo":"WO-222","od":"2026-10-23","due":"2026-11-04","pn":"演示光面钢丝绳 222","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":1800,"kg":2448.0,"done":"未结束"},{"no":"DEMO-223","wo":"WO-223","od":"2026-10-24","due":"2026-11-06","pn":"演示光面钢丝绳 223","spec":"24mm 6*19+FC","coat":"演示涂油","qty":4100,"kg":8029.44,"done":"未结束"},{"no":"DEMO-224","wo":"WO-224","od":"2026-10-25","due":"2026-11-08","pn":"演示光面钢丝绳 224","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":300,"kg":587.52,"done":"未结束"},{"no":"DEMO-225","wo":"WO-225","od":"2026-10-12","due":"2026-10-27","pn":"演示光面钢丝绳 225","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":1300,"kg":2545.92,"done":"未结束"},{"no":"DEMO-226","wo":"WO-226","od":"2026-10-13","due":"2026-10-29","pn":"演示光面钢丝绳 226","spec":"10mm 6*19+FC","coat":"演示涂油","qty":700,"kg":238.0,"done":"未结束"},{"no":"DEMO-227","wo":"WO-227","od":"2026-10-14","due":"2026-10-31","pn":"演示光面钢丝绳 227","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":4000,"kg":1360.0,"done":"未结束"},{"no":"DEMO-228","wo":"WO-228","od":"2026-10-15","due":"2026-11-02","pn":"演示光面钢丝绳 228","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":1100,"kg":374.0,"done":"未结束"},{"no":"DEMO-229","wo":"WO-229","od":"2026-10-16","due":"2026-11-04","pn":"演示光面钢丝绳 229","spec":"12mm 6*19+FC","coat":"演示涂油","qty":5600,"kg":2741.76,"done":"未结束"},{"no":"DEMO-230","wo":"WO-230","od":"2026-10-17","due":"2026-11-06","pn":"演示光面钢丝绳 230","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":4100,"kg":2007.36,"done":"未结束"},{"no":"DEMO-231","wo":"WO-231","od":"2026-10-18","due":"2026-11-08","pn":"演示光面钢丝绳 231","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":3200,"kg":1566.72,"done":"未结束"},{"no":"DEMO-232","wo":"WO-232","od":"2026-10-19","due":"2026-11-10","pn":"演示光面钢丝绳 232","spec":"16mm 6*19+FC","coat":"演示涂油","qty":2500,"kg":2176.0,"done":"未结束"},{"no":"DEMO-233","wo":"WO-233","od":"2026-10-20","due":"2026-11-12","pn":"演示光面钢丝绳 233","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":4200,"kg":3655.68,"done":"未结束"},{"no":"DEMO-234","wo":"WO-234","od":"2026-10-21","due":"2026-11-14","pn":"演示光面钢丝绳 234","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":3400,"kg":2959.36,"done":"未结束"},{"no":"DEMO-235","wo":"WO-235","od":"2026-10-22","due":"2026-10-29","pn":"演示光面钢丝绳 235","spec":"20mm 6*19+FC","coat":"演示涂油","qty":5500,"kg":7480.0,"done":"未结束"},{"no":"DEMO-236","wo":"WO-236","od":"2026-10-23","due":"2026-10-31","pn":"演示光面钢丝绳 236","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":500,"kg":680.0,"done":"未结束"},{"no":"DEMO-237","wo":"WO-237","od":"2026-10-24","due":"2026-11-02","pn":"演示光面钢丝绳 237","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":3500,"kg":4760.0,"done":"未结束"},{"no":"DEMO-238","wo":"WO-238","od":"2026-10-25","due":"2026-11-04","pn":"演示光面钢丝绳 238","spec":"24mm 6*19+FC","coat":"演示涂油","qty":3900,"kg":7637.76,"done":"未结束"},{"no":"DEMO-239","wo":"WO-239","od":"2026-10-12","due":"2026-10-23","pn":"演示光面钢丝绳 239","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":2600,"kg":5091.84,"done":"未结束"},{"no":"DEMO-240","wo":"WO-240","od":"2026-10-13","due":"2026-10-25","pn":"演示光面钢丝绳 240","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":4400,"kg":8616.96,"done":"未结束"},{"no":"DEMO-241","wo":"WO-241","od":"2026-10-14","due":"2026-10-27","pn":"演示光面钢丝绳 241","spec":"10mm 6*19+FC","coat":"演示涂油","qty":1600,"kg":544.0,"done":"未结束"},{"no":"DEMO-242","wo":"WO-242","od":"2026-10-15","due":"2026-10-29","pn":"演示光面钢丝绳 242","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":4000,"kg":1360.0,"done":"未结束"},{"no":"DEMO-243","wo":"WO-243","od":"2026-10-16","due":"2026-10-31","pn":"演示光面钢丝绳 243","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":4700,"kg":1598.0,"done":"未结束"},{"no":"DEMO-244","wo":"WO-244","od":"2026-10-17","due":"2026-11-02","pn":"演示光面钢丝绳 244","spec":"12mm 6*19+FC","coat":"演示涂油","qty":300,"kg":146.88,"done":"未结束"},{"no":"DEMO-245","wo":"WO-245","od":"2026-10-18","due":"2026-11-04","pn":"演示光面钢丝绳 245","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":2600,"kg":1272.96,"done":"未结束"},{"no":"DEMO-246","wo":"WO-246","od":"2026-10-19","due":"2026-11-06","pn":"演示光面钢丝绳 246","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":2900,"kg":1419.84,"done":"未结束"},{"no":"DEMO-247","wo":"WO-247","od":"2026-10-20","due":"2026-11-08","pn":"演示光面钢丝绳 247","spec":"16mm 6*19+FC","coat":"演示涂油","qty":3800,"kg":3307.52,"done":"未结束"},{"no":"DEMO-248","wo":"WO-248","od":"2026-10-21","due":"2026-11-10","pn":"演示光面钢丝绳 248","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":400,"kg":348.16,"done":"未结束"},{"no":"DEMO-249","wo":"WO-249","od":"2026-10-22","due":"2026-11-12","pn":"演示光面钢丝绳 249","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":2000,"kg":1740.8,"done":"未结束"},{"no":"DEMO-250","wo":"WO-250","od":"2026-10-23","due":"2026-11-14","pn":"演示光面钢丝绳 250","spec":"20mm 6*19+FC","coat":"演示涂油","qty":4900,"kg":6664.0,"done":"未结束"},{"no":"DEMO-251","wo":"WO-251","od":"2026-10-24","due":"2026-11-16","pn":"演示光面钢丝绳 251","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":3500,"kg":4760.0,"done":"未结束"},{"no":"DEMO-252","wo":"WO-252","od":"2026-10-25","due":"2026-11-18","pn":"演示光面钢丝绳 252","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":3100,"kg":4216.0,"done":"未结束"},{"no":"DEMO-253","wo":"WO-253","od":"2026-10-12","due":"2026-10-19","pn":"演示光面钢丝绳 253","spec":"24mm 6*19+FC","coat":"演示涂油","qty":4700,"kg":9204.48,"done":"未结束"},{"no":"DEMO-254","wo":"WO-254","od":"2026-10-13","due":"2026-10-21","pn":"演示光面钢丝绳 254","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":600,"kg":1175.04,"done":"未结束"},{"no":"DEMO-255","wo":"WO-255","od":"2026-10-14","due":"2026-10-23","pn":"演示光面钢丝绳 255","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":2400,"kg":4700.16,"done":"未结束"},{"no":"DEMO-256","wo":"WO-256","od":"2026-10-15","due":"2026-10-25","pn":"演示光面钢丝绳 256","spec":"10mm 6*19+FC","coat":"演示涂油","qty":3700,"kg":1258.0,"done":"未结束"},{"no":"DEMO-257","wo":"WO-257","od":"2026-10-16","due":"2026-10-27","pn":"演示光面钢丝绳 257","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":1300,"kg":442.0,"done":"未结束"},{"no":"DEMO-258","wo":"WO-258","od":"2026-10-17","due":"2026-10-29","pn":"演示光面钢丝绳 258","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":5100,"kg":1734.0,"done":"未结束"},{"no":"DEMO-259","wo":"WO-259","od":"2026-10-18","due":"2026-10-31","pn":"演示光面钢丝绳 259","spec":"12mm 6*19+FC","coat":"演示涂油","qty":2400,"kg":1175.04,"done":"未结束"},{"no":"DEMO-260","wo":"WO-260","od":"2026-10-19","due":"2026-11-02","pn":"演示光面钢丝绳 260","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":3900,"kg":1909.44,"done":"未结束"},{"no":"DEMO-261","wo":"WO-261","od":"2026-10-20","due":"2026-11-04","pn":"演示光面钢丝绳 261","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":1100,"kg":538.56,"done":"未结束"},{"no":"DEMO-262","wo":"WO-262","od":"2026-10-21","due":"2026-11-06","pn":"演示光面钢丝绳 262","spec":"16mm 6*19+FC","coat":"演示涂油","qty":5600,"kg":4874.24,"done":"未结束"},{"no":"DEMO-263","wo":"WO-263","od":"2026-10-22","due":"2026-11-08","pn":"演示光面钢丝绳 263","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":5000,"kg":4352.0,"done":"未结束"},{"no":"DEMO-264","wo":"WO-264","od":"2026-10-23","due":"2026-11-10","pn":"演示光面钢丝绳 264","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":5900,"kg":5135.36,"done":"未结束"},{"no":"DEMO-265","wo":"WO-265","od":"2026-10-24","due":"2026-11-12","pn":"演示光面钢丝绳 265","spec":"20mm 6*19+FC","coat":"演示涂油","qty":3800,"kg":5168.0,"done":"未结束"},{"no":"DEMO-266","wo":"WO-266","od":"2026-10-25","due":"2026-11-14","pn":"演示光面钢丝绳 266","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":5500,"kg":7480.0,"done":"未结束"},{"no":"DEMO-267","wo":"WO-267","od":"2026-10-12","due":"2026-11-02","pn":"演示光面钢丝绳 267","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":3600,"kg":4896.0,"done":"未结束"},{"no":"DEMO-268","wo":"WO-268","od":"2026-10-13","due":"2026-11-04","pn":"演示光面钢丝绳 268","spec":"24mm 6*19+FC","coat":"演示涂油","qty":1000,"kg":1958.4,"done":"未结束"},{"no":"DEMO-269","wo":"WO-269","od":"2026-10-14","due":"2026-11-06","pn":"演示光面钢丝绳 269","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":1800,"kg":3525.12,"done":"未结束"},{"no":"DEMO-270","wo":"WO-270","od":"2026-10-15","due":"2026-11-08","pn":"演示光面钢丝绳 270","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":4600,"kg":9008.64,"done":"未结束"},{"no":"DEMO-271","wo":"WO-271","od":"2026-10-16","due":"2026-10-23","pn":"演示光面钢丝绳 271","spec":"10mm 6*19+FC","coat":"演示涂油","qty":5700,"kg":1938.0,"done":"未结束"},{"no":"DEMO-272","wo":"WO-272","od":"2026-10-17","due":"2026-10-25","pn":"演示光面钢丝绳 272","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":400,"kg":136.0,"done":"未结束"},{"no":"DEMO-273","wo":"WO-273","od":"2026-10-18","due":"2026-10-27","pn":"演示光面钢丝绳 273","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":4400,"kg":1496.0,"done":"未结束"},{"no":"DEMO-274","wo":"WO-274","od":"2026-10-19","due":"2026-10-29","pn":"演示光面钢丝绳 274","spec":"12mm 6*19+FC","coat":"演示涂油","qty":2600,"kg":1272.96,"done":"未结束"},{"no":"DEMO-275","wo":"WO-275","od":"2026-10-20","due":"2026-10-31","pn":"演示光面钢丝绳 275","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":1300,"kg":636.48,"done":"未结束"},{"no":"DEMO-276","wo":"WO-276","od":"2026-10-21","due":"2026-11-02","pn":"演示光面钢丝绳 276","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":2100,"kg":1028.16,"done":"未结束"},{"no":"DEMO-277","wo":"WO-277","od":"2026-10-22","due":"2026-11-04","pn":"演示光面钢丝绳 277","spec":"16mm 6*19+FC","coat":"演示涂油","qty":3000,"kg":2611.2,"done":"未结束"},{"no":"DEMO-278","wo":"WO-278","od":"2026-10-23","due":"2026-11-06","pn":"演示光面钢丝绳 278","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":1600,"kg":1392.64,"done":"未结束"},{"no":"DEMO-279","wo":"WO-279","od":"2026-10-24","due":"2026-11-08","pn":"演示光面钢丝绳 279","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":5500,"kg":4787.2,"done":"未结束"},{"no":"DEMO-280","wo":"WO-280","od":"2026-10-25","due":"2026-11-10","pn":"演示光面钢丝绳 280","spec":"20mm 6*19+FC","coat":"演示涂油","qty":1700,"kg":2312.0,"done":"未结束"},{"no":"DEMO-281","wo":"WO-281","od":"2026-10-12","due":"2026-10-29","pn":"演示光面钢丝绳 281","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":800,"kg":1088.0,"done":"未结束"},{"no":"DEMO-282","wo":"WO-282","od":"2026-10-13","due":"2026-10-31","pn":"演示光面钢丝绳 282","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":3500,"kg":4760.0,"done":"未结束"},{"no":"DEMO-283","wo":"WO-283","od":"2026-10-14","due":"2026-11-02","pn":"演示光面钢丝绳 283","spec":"24mm 6*19+FC","coat":"演示涂油","qty":4100,"kg":8029.44,"done":"未结束"},{"no":"DEMO-284","wo":"WO-284","od":"2026-10-15","due":"2026-11-04","pn":"演示光面钢丝绳 284","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":5500,"kg":10771.2,"done":"未结束"},{"no":"DEMO-285","wo":"WO-285","od":"2026-10-16","due":"2026-11-06","pn":"演示光面钢丝绳 285","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":4100,"kg":8029.44,"done":"未结束"},{"no":"DEMO-286","wo":"WO-286","od":"2026-10-17","due":"2026-11-08","pn":"演示光面钢丝绳 286","spec":"10mm 6*19+FC","coat":"演示涂油","qty":5200,"kg":1768.0,"done":"未结束"},{"no":"DEMO-287","wo":"WO-287","od":"2026-10-18","due":"2026-11-10","pn":"演示光面钢丝绳 287","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":2200,"kg":748.0,"done":"未结束"},{"no":"DEMO-288","wo":"WO-288","od":"2026-10-19","due":"2026-11-12","pn":"演示光面钢丝绳 288","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":4300,"kg":1462.0,"done":"未结束"},{"no":"DEMO-289","wo":"WO-289","od":"2026-10-20","due":"2026-10-27","pn":"演示光面钢丝绳 289","spec":"12mm 6*19+FC","coat":"演示涂油","qty":2400,"kg":1175.04,"done":"未结束"},{"no":"DEMO-290","wo":"WO-290","od":"2026-10-21","due":"2026-10-29","pn":"演示光面钢丝绳 290","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":2500,"kg":1224.0,"done":"未结束"},{"no":"DEMO-291","wo":"WO-291","od":"2026-10-22","due":"2026-10-31","pn":"演示光面钢丝绳 291","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":1000,"kg":489.6,"done":"未结束"},{"no":"DEMO-292","wo":"WO-292","od":"2026-10-23","due":"2026-11-02","pn":"演示光面钢丝绳 292","spec":"16mm 6*19+FC","coat":"演示涂油","qty":5000,"kg":4352.0,"done":"未结束"},{"no":"DEMO-293","wo":"WO-293","od":"2026-10-24","due":"2026-11-04","pn":"演示光面钢丝绳 293","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":5600,"kg":4874.24,"done":"未结束"},{"no":"DEMO-294","wo":"WO-294","od":"2026-10-25","due":"2026-11-06","pn":"演示光面钢丝绳 294","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":1900,"kg":1653.76,"done":"未结束"},{"no":"DEMO-295","wo":"WO-295","od":"2026-10-12","due":"2026-10-25","pn":"演示光面钢丝绳 295","spec":"20mm 6*19+FC","coat":"演示涂油","qty":2000,"kg":2720.0,"done":"未结束"},{"no":"DEMO-296","wo":"WO-296","od":"2026-10-13","due":"2026-10-27","pn":"演示光面钢丝绳 296","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":1000,"kg":1360.0,"done":"未结束"},{"no":"DEMO-297","wo":"WO-297","od":"2026-10-14","due":"2026-10-29","pn":"演示光面钢丝绳 297","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":4900,"kg":6664.0,"done":"未结束"},{"no":"DEMO-298","wo":"WO-298","od":"2026-10-15","due":"2026-10-31","pn":"演示光面钢丝绳 298","spec":"24mm 6*19+FC","coat":"演示涂油","qty":1300,"kg":2545.92,"done":"未结束"},{"no":"DEMO-299","wo":"WO-299","od":"2026-10-16","due":"2026-11-02","pn":"演示光面钢丝绳 299","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":700,"kg":1370.88,"done":"未结束"},{"no":"DEMO-300","wo":"WO-300","od":"2026-10-17","due":"2026-11-04","pn":"演示光面钢丝绳 300","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":5200,"kg":10183.68,"done":"未结束"},{"no":"DEMO-301","wo":"WO-301","od":"2026-10-18","due":"2026-11-06","pn":"演示光面钢丝绳 301","spec":"10mm 6*19+FC","coat":"演示涂油","qty":1000,"kg":340.0,"done":"未结束"},{"no":"DEMO-302","wo":"WO-302","od":"2026-10-19","due":"2026-11-08","pn":"演示光面钢丝绳 302","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":1000,"kg":340.0,"done":"未结束"},{"no":"DEMO-303","wo":"WO-303","od":"2026-10-20","due":"2026-11-10","pn":"演示光面钢丝绳 303","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":3100,"kg":1054.0,"done":"未结束"},{"no":"DEMO-304","wo":"WO-304","od":"2026-10-21","due":"2026-11-12","pn":"演示光面钢丝绳 304","spec":"12mm 6*19+FC","coat":"演示涂油","qty":4500,"kg":2203.2,"done":"未结束"},{"no":"DEMO-305","wo":"WO-305","od":"2026-10-22","due":"2026-11-14","pn":"演示光面钢丝绳 305","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":4800,"kg":2350.08,"done":"未结束"},{"no":"DEMO-306","wo":"WO-306","od":"2026-10-23","due":"2026-11-16","pn":"演示光面钢丝绳 306","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":3800,"kg":1860.48,"done":"未结束"},{"no":"DEMO-307","wo":"WO-307","od":"2026-10-24","due":"2026-10-31","pn":"演示光面钢丝绳 307","spec":"16mm 6*19+FC","coat":"演示涂油","qty":1200,"kg":1044.48,"done":"未结束"},{"no":"DEMO-308","wo":"WO-308","od":"2026-10-25","due":"2026-11-02","pn":"演示光面钢丝绳 308","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":2500,"kg":2176.0,"done":"未结束"},{"no":"DEMO-309","wo":"WO-309","od":"2026-10-12","due":"2026-10-21","pn":"演示光面钢丝绳 309","spec":"16mm 8*K26WS+IWRC","coat":"演示涂油","qty":3700,"kg":3220.48,"done":"未结束"},{"no":"DEMO-310","wo":"WO-310","od":"2026-10-13","due":"2026-10-23","pn":"演示光面钢丝绳 310","spec":"20mm 6*19+FC","coat":"演示涂油","qty":4600,"kg":6256.0,"done":"未结束"},{"no":"DEMO-311","wo":"WO-311","od":"2026-10-14","due":"2026-10-25","pn":"演示光面钢丝绳 311","spec":"20mm 6*36+IWRC","coat":"演示涂油","qty":2900,"kg":3944.0,"done":"未结束"},{"no":"DEMO-312","wo":"WO-312","od":"2026-10-15","due":"2026-10-27","pn":"演示光面钢丝绳 312","spec":"20mm 8*K26WS+IWRC","coat":"演示涂油","qty":4000,"kg":5440.0,"done":"未结束"},{"no":"DEMO-313","wo":"WO-313","od":"2026-10-16","due":"2026-10-29","pn":"演示光面钢丝绳 313","spec":"24mm 6*19+FC","coat":"演示涂油","qty":3500,"kg":6854.4,"done":"未结束"},{"no":"DEMO-314","wo":"WO-314","od":"2026-10-17","due":"2026-10-31","pn":"演示光面钢丝绳 314","spec":"24mm 6*36+IWRC","coat":"演示涂油","qty":4900,"kg":9596.16,"done":"未结束"},{"no":"DEMO-315","wo":"WO-315","od":"2026-10-18","due":"2026-11-02","pn":"演示光面钢丝绳 315","spec":"24mm 8*K26WS+IWRC","coat":"演示涂油","qty":3500,"kg":6854.4,"done":"未结束"},{"no":"DEMO-316","wo":"WO-316","od":"2026-10-19","due":"2026-11-04","pn":"演示光面钢丝绳 316","spec":"10mm 6*19+FC","coat":"演示涂油","qty":1900,"kg":646.0,"done":"未结束"},{"no":"DEMO-317","wo":"WO-317","od":"2026-10-20","due":"2026-11-06","pn":"演示光面钢丝绳 317","spec":"10mm 6*36+IWRC","coat":"演示涂油","qty":5000,"kg":1700.0,"done":"未结束"},{"no":"DEMO-318","wo":"WO-318","od":"2026-10-21","due":"2026-11-08","pn":"演示光面钢丝绳 318","spec":"10mm 8*K26WS+IWRC","coat":"演示涂油","qty":3500,"kg":1190.0,"done":"未结束"},{"no":"DEMO-319","wo":"WO-319","od":"2026-10-22","due":"2026-11-10","pn":"演示光面钢丝绳 319","spec":"12mm 6*19+FC","coat":"演示涂油","qty":2000,"kg":979.2,"done":"未结束"},{"no":"DEMO-320","wo":"WO-320","od":"2026-10-23","due":"2026-11-12","pn":"演示光面钢丝绳 320","spec":"12mm 6*36+IWRC","coat":"演示涂油","qty":5400,"kg":2643.84,"done":"未结束"},{"no":"DEMO-321","wo":"WO-321","od":"2026-10-24","due":"2026-11-14","pn":"演示光面钢丝绳 321","spec":"12mm 8*K26WS+IWRC","coat":"演示涂油","qty":700,"kg":342.72,"done":"未结束"},{"no":"DEMO-322","wo":"WO-322","od":"2026-10-25","due":"2026-11-16","pn":"演示光面钢丝绳 322","spec":"16mm 6*19+FC","coat":"演示涂油","qty":4100,"kg":3568.64,"done":"未结束"},{"no":"DEMO-323","wo":"WO-323","od":"2026-10-12","due":"2026-11-04","pn":"演示光面钢丝绳 323","spec":"16mm 6*36+IWRC","coat":"演示涂油","qty":5500,"kg":4787.2,"done":"未结束"}],"quality":[{"date":"2026-10-12","no":"CASE-001","loc":"T001","mat":"演示材料","spec":"演示规格","qty":"100m","cls":"压伤","desc":"合成演示案例：检测到压伤，用于说明质量问题分类。","act":"复核并处理","cause":"演示工艺偏差","fix":"检查工艺参数并记录复核结果"},{"date":"2026-10-12","no":"CASE-002","loc":"T002","mat":"演示材料","spec":"演示规格","qty":"100m","cls":"股有缝","desc":"合成演示案例：检测到股有缝，用于说明质量问题分类。","act":"复核并处理","cause":"演示工艺偏差","fix":"检查工艺参数并记录复核结果"},{"date":"2026-10-12","no":"CASE-003","loc":"R001","mat":"演示材料","spec":"演示规格","qty":"100m","cls":"打拧","desc":"合成演示案例：检测到打拧，用于说明质量问题分类。","act":"复核并处理","cause":"演示工艺偏差","fix":"检查工艺参数并记录复核结果"},{"date":"2026-10-12","no":"CASE-004","loc":"R002","mat":"演示材料","spec":"演示规格","qty":"100m","cls":"绳芯弯曲","desc":"合成演示案例：检测到绳芯弯曲，用于说明质量问题分类。","act":"复核并处理","cause":"演示工艺偏差","fix":"检查工艺参数并记录复核结果"},{"date":"2026-10-12","no":"CASE-005","loc":"D001","mat":"演示材料","spec":"演示规格","qty":"100m","cls":"压线","desc":"合成演示案例：检测到压线，用于说明质量问题分类。","act":"复核并处理","cause":"演示工艺偏差","fix":"检查工艺参数并记录复核结果"}],"qsum":[{"phen":"拉丝压线","batch":3,"cause":"演示排线偏差","fix":"检查排线"},{"phen":"捻股接头断丝","batch":2,"cause":"演示接头偏差","fix":"检查接头"}],"twistNA":{},"ropeNA":{}};
+/* ======================= 工具 ======================= */
+const H=36e5, D1=864e5;
+const $=(s,r)=>(r||document).querySelector(s), $$=(s,r)=>[...(r||document).querySelectorAll(s)];
+const pad=n=>String(n).padStart(2,'0');
+const fmtD=t=>{const d=new Date(t);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`};
+const fmtDT=t=>{const d=new Date(t);return `${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
+const fmtH=h=>h>=24?`${(h/24).toFixed(1)}天`:`${h.toFixed(1)}h`;
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const shiftOf=t=>new Date(t).getHours()>=8&&new Date(t).getHours()<20?'白班':'夜班';
+function toast(m){const e=$('#toast');e.textContent=m;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2600)}
+function busy(on,tx){$('#busy').classList.toggle('on',!!on);if(tx)$('#busyTx').textContent=tx}
+
+/* ======================= 规格解析 ======================= */
+const OUTER={17:11,18:12,19:12,24:14,34:16,35:16,36:16};
+const WIRE_F={7:3,19:5,24:5,25:6,26:7,29:7,31:7,36:7,37:7,41:7,49:8};
+function parseSpec(pn,spec){
+  const s=String(spec||'').trim();
+  let m=s.match(/^([\d.]+)\s*mm\s*(.*)$/i);
+  let D=m?parseFloat(m[1]):parseFloat(s)||12;
+  let rest=m?m[2].trim():s;
+  let par=rest.match(/\(([^)]*)\)/);
+  let struct=(par?par[1]:rest).replace(/^GT[0-9A-Z]*\s*/i,'').trim()||rest;
+  if(!par&&/^GT/i.test(rest)) struct=rest.replace(/^GT\s*/i,'');
+  let core='FC';
+  if(/PIWRC/i.test(struct))core='PIWRC'; else if(/IWRC/i.test(struct))core='IWRC';
+  else if(/WSC/i.test(struct))core='WSC'; else if(/FC/i.test(struct))core='FC';
+  const body=struct.split('+')[0];
+  let nm=body.match(/^(\d+)\s*[WwSs]?\s*[*x×]/);
+  let n=nm?parseInt(nm[1]):6;
+  let cm=body.match(/[*x×]\s*[Kk]?\s*(\d+)/);
+  let wires=cm?parseInt(cm[1]):19;
+  const nOuter=OUTER[n]||n;
+  const sn=Math.sin(Math.PI/Math.max(3,nOuter));
+  const dStrand=+(D*sn/(1+sn)).toFixed(3);
+  const wf=WIRE_F[wires]||6;
+  const dWire=+clamp(dStrand/wf,0.22,5.0).toFixed(3);
+  const surf=/镀锌|锌/.test(pn)?'镀锌':(/不锈/.test(pn)?'不锈钢':'光面');
+  const plastic=/注塑|涂塑/.test(pn);
+  return {D,struct,core,n,nOuter,wires,dStrand,dWire,surf,plastic,
+    kDraw:surf+'/'+dWire.toFixed(2),
+    kTwist:struct.split('+')[0]+'/'+dStrand.toFixed(2)+'/'+surf,
+    kRope:struct+'/'+D.toFixed(1)+'/'+surf};
+}
+/* ======================= 速率查表 ======================= */
+let TWK=null,RPK=null;
+function twistLookup(d){
+  if(!TWK)TWK=Object.keys(DATA.twistBase).map(k=>[Number(k),k]).sort((a,b)=>a[0]-b[0]);
+  let best=TWK[0],bd=1e9;
+  for(const k of TWK){const x=Math.abs(k[0]-d);if(x<bd){bd=x;best=k}}
+  return {key:best[0],base:DATA.twistBase[best[1]],name:DATA.twistName[best[1]],dev:bd};
+}
+function ropeLookup(spec,D,struct){
+  if(!RPK)RPK=Object.keys(DATA.ropeBase);
+  const s=String(spec).trim();
+  if(DATA.ropeBase[s]!=null)return{key:s,base:DATA.ropeBase[s],name:DATA.ropeName[s],exact:true};
+  let best=null,bd=1e9;
+  const core=struct.split('+')[0].replace(/[Kk]/g,'');
+  for(const k of RPK){
+    const m=k.match(/^([\d.]+)\s*mm/);if(!m)continue;
+    const kd=parseFloat(m[1]);
+    let pen=Math.abs(kd-D);
+    if(!k.replace(/[Kk]/g,'').includes(core))pen+=14;
+    if(pen<bd){bd=pen;best=k}
+  }
+  return {key:best,base:DATA.ropeBase[best],name:DATA.ropeName[best],exact:false,dev:bd};
+}
+/* ======================= 设备台账 ======================= */
+function buildMachines(){
+  const L=[];
+  DATA.draw.forEach(d=>L.push({id:d.id,name:d.name,proc:'拉丝',type:d.type,lo:d.lo,hi:d.hi,kgday:d.kgday,rate:0}));
+  Object.keys(DATA.twistFac).forEach(id=>L.push({id,name:'捻股机 '+id,proc:'捻股',type:'捻股机',fac:DATA.twistFac[id]}));
+  Object.keys(DATA.ropeFac).forEach(id=>L.push({id,name:'合绳机 '+id,proc:'合绳',type:'合绳机',fac:DATA.ropeFac[id]}));
+  return L;
+}
+/* ======================= 订单工艺展开 ======================= */
+function buildJobs(orders,cfg){
+  return orders.map((o,i)=>{
+    const sp=parseSpec(o.pn,o.spec);
+    const tw=twistLookup(sp.dStrand), rp=ropeLookup(o.spec,sp.D,sp.struct);
+    const kg=(o.kg&&o.kg>0)?o.kg:o.qty*sp.D*sp.D*0.0034;
+    const prio=o.prio||'普通';
+    return {
+      idx:i,no:o.no,wo:o.wo,pn:o.pn,spec:o.spec,qty:o.qty,kg,
+      od:new Date(o.od+'T00:00:00').getTime(),
+      due:new Date(o.due+'T23:59:59').getTime(),
+      prio, rush:!!o.rush, matReady:o.matReady?new Date(o.matReady+'T00:00:00').getTime():0,
+      sp,tw,rp,
+      drawKg:+(kg*cfg.scrap).toFixed(1),
+      strandM:Math.round(o.qty*sp.n*cfg.lay),
+      ropeM:o.qty
+    };
+  });
+}
+/* ======================= 换型耗时 R3/R4/R5 ======================= */
+function changeover(proc,prev,cur){
+  if(!prev)return{h:0,why:'该设备首件，无换型'};
+  if(proc==='拉丝'){
+    if(prev.kDraw===cur.kDraw)return{h:0,why:'原料与成品规格均相同，连排免换型（R3）'};
+    const a=prev.dWire,b=cur.dWire;
+    const dm=Math.abs(a-b)/Math.max(a,b);
+    const sameSurf=prev.surf===cur.surf;
+    let h=1+dm*6+(sameSurf?0:1.2);
+    h=clamp(h,1,5);
+    return{h:+h.toFixed(2),why:`成品丝径 ${a}→${b}mm${sameSurf?'':'、原料表面'+prev.surf+'→'+cur.surf}，触发换型（R3），按规格切换幅度取 ${h.toFixed(1)}h（R5）`};
+  }
+  const pd=proc==='捻股'?prev.dStrand:prev.D, cd=proc==='捻股'?cur.dStrand:cur.D;
+  const ps=prev.struct.split('+')[0], cs=cur.struct.split('+')[0];
+  if(ps===cs&&Math.abs(pd-cd)<0.01)return{h:0,why:'结构与'+(proc==='捻股'?'股径':'绳径')+'均相同，连排免换型（R4）'};
+  const dm=Math.abs(pd-cd)/Math.max(pd,cd);
+  let h=1+dm*6+(ps===cs?0:1.5);
+  h=clamp(h,1,5);
+  const lab=proc==='捻股'?'股径':'绳径';
+  return{h:+h.toFixed(2),why:`${ps===cs?'':'结构 '+ps+'→'+cs+'、'}${lab} ${pd.toFixed(2)}→${cd.toFixed(2)}mm，触发换型（R4），按切换幅度取 ${h.toFixed(1)}h（R5）`};
+}
+/* ======================= 机台时间线 ======================= */
+function mkTL(machines,downs){
+  const tl={};
+  machines.forEach(m=>tl[m.id]={busy:[],last:null});
+  (downs||[]).forEach(d=>{
+    if(tl[d.mid])tl[d.mid].busy.push({s:d.s,e:d.e,down:true});
+  });
+  Object.values(tl).forEach(t=>t.busy.sort((a,b)=>a.s-b.s));
+  return tl;
+}
+function earliestFit(t,ready,dur){
+  let s=ready;
+  for(let i=0;i<t.busy.length;i++){
+    const b=t.busy[i];
+    if(s+dur<=b.s)return s;
+    if(s<b.e)s=b.e;
+  }
+  return s;
+}
+function place(t,s,e,down){t.busy.push({s,e,down:!!down});t.busy.sort((a,b)=>a.s-b.s)}
+
+/* ======================= 排产主引擎 ======================= */
+const PROCS=['拉丝','捻股','合绳'];
+const PCOL={'拉丝':'#3FA9C9','捻股':'#E0A94B','合绳':'#5FB97A'};
+
+function eligible(proc,job,machines){
+  if(proc==='拉丝'){
+    const d=job.sp.dWire;
+    let L=machines.filter(m=>m.proc==='拉丝'&&d>=m.lo-1e-9&&d<=m.hi+1e-9);
+    if(!L.length){
+      let best=null,bd=1e9;
+      machines.filter(m=>m.proc==='拉丝').forEach(m=>{
+        const x=d<m.lo?m.lo-d:d-m.hi; if(x<bd){bd=x;best=m}});
+      L=best?[best]:[];
+    }
+    return L;
+  }
+  if(proc==='捻股'){
+    const na=(DATA.twistNA&&DATA.twistNA[String(job.tw.key)])||[];
+    const L=machines.filter(m=>m.proc==='捻股'&&na.indexOf(m.id)<0);
+    return L.length?L:machines.filter(m=>m.proc==='捻股');
+  }
+  const na2=(DATA.ropeNA&&DATA.ropeNA[String(job.rp.key)])||[];
+  const L2=machines.filter(m=>m.proc==='合绳'&&na2.indexOf(m.id)<0);
+  return L2.length?L2:machines.filter(m=>m.proc==='合绳');
+}
+function durOn(proc,job,m,share){
+  share=share||1;
+  if(proc==='拉丝'){
+    const per=m.kgday/24, q=job.drawKg*share;
+    return {h:q/Math.max(per,0.5), rate:m.kgday, unit:'kg/天', q, ql:Math.round(q).toLocaleString()+' kg'};
+  }
+  if(proc==='捻股'){
+    const r=(job.tw.base||0)*m.fac, q=job.strandM*share;
+    return {h:q/Math.max(r,0.05)/60, rate:+r.toFixed(3), unit:'m/min', q, ql:Math.round(q).toLocaleString()+' m（股）'};
+  }
+  const r=(job.rp.base||0)*m.fac, q=job.ropeM*share;
+  return {h:q/Math.max(r,0.05)/60, rate:+r.toFixed(3), unit:'m/min', q, ql:Math.round(q).toLocaleString()+' m'};
+}
+// 批次数：大批量订单可在同工序多台机台并行生产（R1 同型号内可多机分担）
+function lotCount(proc,job,machines,cfg){
+  const cands=eligible(proc,job,machines);
+  if(!cands.length)return 1;
+  let best=1e18;
+  for(const m of cands){const d=durOn(proc,job,m,1);if(isFinite(d.h)&&d.h>0)best=Math.min(best,d.h)}
+  if(!isFinite(best))return 1;
+  const capMax=proc==='拉丝'?cfg.splitDraw:(proc==='捻股'?Math.min(cfg.splitTwist,job.sp.n):(job.ropeM>=4000?cfg.splitRope:1));
+  return clamp(Math.ceil(best/cfg.lotMax),1,Math.min(capMax,cands.length));
+}
+function prioScore(j,cfg){
+  let s=0;
+  if(j.rush)s-=1e12;
+  if(j.prio==='重点')s-=3*D1;
+  if(j.prio==='罚款')s-=2*D1;
+  return j.due+s;
+}
+
+function schedule(state){
+  const cfg=state.cfg, machines=state.machines;
+  const jobs=buildJobs(state.orders,cfg);
+  const t0=state.t0;
+  const tl=mkTL(machines,state.downs);
+  const locks={}; (state.locks||[]).forEach(l=>locks[l.key]=l);
+  const prev=state.prevAssign||{};
+  const sticky=(cfg.sticky||0)*H;
+  const tasks=[], byKey={};
+  const order=[...jobs].sort((a,b)=>prioScore(a,cfg)-prioScore(b,cfg));
+
+  // 1) 先落位人工锁定的任务，算法只在剩余空间求解
+  order.forEach(j=>PROCS.forEach(p=>{
+    const k=j.wo+'|'+p, L=locks[k];
+    if(!L||!L.lots||!L.lots.length)return;
+    const lots=[];
+    L.lots.forEach(x=>{
+      const m=machines.find(z=>z.id===x.mid&&z.proc===p);
+      if(!m)return;
+      const d=durOn(p,j,m,1/L.lots.length), s=x.s, e=s+d.h*H;
+      place(tl[m.id],s,e);
+      lots.push({mid:m.id,mname:m.name,s,e,chS:s,chE:s,ch:{h:0,why:'人工锁定，按计划员指定机台与时刻执行'},dur:d});
+    });
+    if(lots.length)byKey[k]={locked:true,lots};
+  }));
+
+  // 2) 主循环
+  for(const j of order){
+    let ready=Math.max(t0,j.od,j.matReady||0);
+    let prevEnd=null;
+    for(const p of PROCS){
+      const k=j.wo+'|'+p;
+      const pre=byKey[k];
+      let lots=[];
+      if(pre&&pre.locked){
+        lots=pre.lots;
+        lots.forEach(l=>{tl[l.mid].last=j.sp});
+      }else{
+        const cands=eligible(p,j,machines).filter(m=>{const d=durOn(p,j,m,1);return isFinite(d.h)&&d.h>0});
+        if(!cands.length){ready+=D1;continue}
+        const K=lotCount(p,j,machines,cfg);
+        // 先选出 K 台机台（按"最早完工 + λ×换型"评估），再按各机台速度按比例分摊批量，使各批同步完工
+        const scored=cands.map(m=>{
+          const d=durOn(p,j,m,1/K);
+          const ch=changeover(p,tl[m.id].last,j.sp);
+          const need=(d.h+ch.h)*H;
+          const s=earliestFit(tl[m.id],ready,need);
+          const pv=prev[k]; let cost=s+need+ch.h*H*cfg.wChange;
+          if(pv&&pv.indexOf(m.id)>=0)cost-=sticky;
+          return {m,ch,h1:durOn(p,j,m,1).h,cost};
+        }).sort((a,b)=>a.cost-b.cost);
+        const sel=scored.slice(0,K);
+        const wsum=sel.reduce((a,x)=>a+1/x.h1,0);
+        sel.forEach(x=>{
+          const share=(1/x.h1)/wsum;
+          const d=durOn(p,j,x.m,share);
+          const ch=changeover(p,tl[x.m.id].last,j.sp);
+          const need=(d.h+ch.h)*H;
+          const s=earliestFit(tl[x.m.id],ready,need), e=s+need;
+          place(tl[x.m.id],s,e);
+          tl[x.m.id].last=j.sp;
+          lots.push({mid:x.m.id,mname:x.m.name,s:s+ch.h*H,e,chS:s,chE:s+ch.h*H,ch,dur:d,share});
+        });
+        if(!lots.length){ready+=D1;continue}
+      }
+      const s=Math.min(...lots.map(l=>l.s)), e=Math.max(...lots.map(l=>l.e));
+      const chS=Math.min(...lots.map(l=>l.chS));
+      const gap=prevEnd==null?0:(chS-prevEnd)/H;
+      const T={key:k,wo:j.wo,no:j.no,job:j,proc:p,lots,
+        mid:lots.map(l=>l.mid).join('+'),mname:lots.length>1?lots.length+' 台并行':lots[0].mname,
+        s,e,chS,chE:Math.min(...lots.map(l=>l.chE)),
+        ch:lots[0].ch,dur:lots[0].dur,locked:!!(pre&&pre.locked),gap,
+        qtyLabel:(lots.length>1?lots.length+'批 × ':'')+lots[0].dur.ql};
+      tasks.push(T);byKey[k]=T;
+      prevEnd=e;ready=e;
+    }
+  }
+
+  // 3) R6 右移修正：压缩工序间等待
+  const maxGap=cfg.maxGap*24*H;
+  for(const j of jobs){
+    for(let i=1;i<PROCS.length;i++){
+      const up=byKey[j.wo+'|'+PROCS[i-1]], dn=byKey[j.wo+'|'+PROCS[i]];
+      if(!up||!dn||up.locked)continue;
+      if(dn.chS-up.e<=maxGap)continue;
+      const want=dn.chS-maxGap;
+      let shift=Infinity;
+      up.lots.forEach(l=>{
+        const t=tl[l.mid], len=l.e-l.chS;
+        const others=t.busy.filter(b=>!(Math.abs(b.s-l.chS)<1&&Math.abs(b.e-l.e)<1));
+        let ns=want-len, ok=true;
+        for(const b of others){if(ns<b.e&&ns+len>b.s){ok=false;break}}
+        shift=ok?Math.min(shift,ns-l.chS):0;
+      });
+      if(isFinite(shift)&&shift>0){
+        up.lots.forEach(l=>{
+          const t=tl[l.mid];
+          t.busy.forEach(b=>{if(Math.abs(b.s-l.chS)<1&&Math.abs(b.e-l.e)<1){b.s+=shift;b.e+=shift}});
+          l.s+=shift;l.e+=shift;l.chS+=shift;l.chE+=shift;
+        });
+        up.s+=shift;up.e+=shift;up.chS+=shift;up.chE+=shift;up.shifted=true;
+        dn.gap=(dn.chS-up.e)/H;
+      }
+    }
+  }
+
+  const res=[];
+  for(const j of jobs){
+    const ts=PROCS.map(p=>byKey[j.wo+'|'+p]).filter(Boolean);
+    if(ts.length<3){res.push({job:j,tasks:ts,fin:null,late:null,ok:false});continue}
+    const fin=ts[2].e, late=(fin-j.due)/D1;
+    res.push({job:j,tasks:ts,fin,late:+late.toFixed(2),ok:true,
+      gaps:[(ts[1].chS-ts[0].e)/D1,(ts[2].chS-ts[1].e)/D1]});
+  }
+  return {tasks,res,tl,jobs,byKey};
+}
+/* ======================= 指标与风险 ======================= */
+function tolOf(p){return p==='罚款'?0:3}
+function analyze(plan,state){
+  const horizonEnd=Math.max(...plan.tasks.map(t=>t.e),state.t0+D1);
+  const span=horizonEnd-state.t0;
+  const util={};
+  state.machines.forEach(m=>util[m.id]={m,work:0,chg:0,down:0,n:0});
+  plan.tasks.forEach(t=>t.lots.forEach(l=>{
+    const u=util[l.mid];if(!u)return;
+    u.work+=(l.e-l.chE);u.chg+=(l.chE-l.chS);u.n++;
+  }));
+  (state.downs||[]).forEach(d=>{if(util[d.mid])util[d.mid].down+=(d.e-d.s)});
+  Object.values(util).forEach(u=>{
+    u.pct=span>0?(u.work+u.chg)/span*100:0;
+    u.chgPct=(u.work+u.chg)>0?u.chg/(u.work+u.chg)*100:0;
+  });
+  const risks=[];
+  let onTime=0,lateSum=0,lateN=0;
+  plan.res.forEach(r=>{
+    if(!r.ok){risks.push({lv:1,type:'无可用产能',wo:r.job.wo,msg:`订单 ${r.job.no} 规格 ${r.job.spec} 未能找到可加工设备，工序未完整排入`});return}
+    const tol=tolOf(r.job.prio);
+    if(r.late<=0)onTime++;
+    else{
+      lateSum+=r.late;lateN++;
+      if(r.late>tol)risks.push({lv:1,type:'交期不达',wo:r.job.wo,
+        msg:`订单 ${r.job.no}（${r.job.prio}）预计 ${fmtD(r.fin)} 完工，超交期 ${r.late.toFixed(1)} 天，超出容忍 ${tol} 天（R8${r.job.prio==='罚款'?'，硬约束·将产生罚款':''}）`});
+      else risks.push({lv:2,type:'交期预警',wo:r.job.wo,
+        msg:`订单 ${r.job.no} 超交期 ${r.late.toFixed(1)} 天，在客户容忍 ${tol} 天内（R8 软约束）`});
+    }
+    (r.gaps||[]).forEach((g,i)=>{
+      if(g>state.cfg.maxGap)risks.push({lv:2,type:'工序间隔超限',wo:r.job.wo,
+        msg:`订单 ${r.job.no} ${PROCS[i]}→${PROCS[i+1]} 间隔 ${g.toFixed(1)} 天，超过 ${state.cfg.maxGap} 天上限（R6），存在半成品积压与质量风险`});
+    });
+    if(r.job.matReady&&r.tasks[0].s<r.job.matReady)
+      risks.push({lv:1,type:'缺料',wo:r.job.wo,msg:`订单 ${r.job.no} 原材料预计 ${fmtD(r.job.matReady)} 到货，晚于拉丝开工 ${fmtD(r.tasks[0].s)}`});
+  });
+  Object.values(util).forEach(u=>{
+    if(u.pct>95)risks.push({lv:1,type:'产能超载',mid:u.m.id,msg:`${u.m.name}（${u.m.id}）负荷 ${u.pct.toFixed(0)}%，已无缓冲，任何扰动都会顺延交期`});
+    else if(u.pct>88)risks.push({lv:2,type:'产能吃紧',mid:u.m.id,msg:`${u.m.name}（${u.m.id}）负荷 ${u.pct.toFixed(0)}%`});
+  });
+  (state.mats||[]).forEach(m=>{
+    if(m.late)risks.push({lv:1,type:'物料延迟',wo:m.wo,msg:m.msg});
+  });
+  const n=plan.res.length||1;
+  const pcs={};
+  PROCS.forEach(p=>{
+    const L=Object.values(util).filter(u=>u.m.proc===p);
+    pcs[p]={avg:L.reduce((a,b)=>a+b.pct,0)/(L.length||1),n:L.length,
+      max:Math.max(...L.map(x=>x.pct),0),min:Math.min(...L.map(x=>x.pct),100),
+      chg:L.reduce((a,b)=>a+b.chg,0)/H};
+  });
+  return {util,risks,pcs,span,horizonEnd,
+    kpi:{onTime:onTime/n*100,onTimeN:onTime,total:n,
+      avgLate:lateN?lateSum/lateN:0,lateN,
+      util:Object.values(util).reduce((a,b)=>a+b.pct,0)/Object.values(util).length,
+      risk1:risks.filter(r=>r.lv===1).length,risk2:risks.filter(r=>r.lv===2).length,
+      makespan:span/D1,
+      chgH:plan.tasks.reduce((a,t)=>a+(t.chE-t.chS),0)/H}};
+}
+/* ======================= 全局状态 ======================= */
+const ST={
+  orders:[],machines:buildMachines(),downs:[],locks:[],mats:[],
+  cfg:{scrap:1.05,lay:1.03,maxGap:3,wChange:0.35,lotMax:24,splitDraw:8,splitTwist:6,splitRope:3,sticky:36},
+  scenarios:[],prevAssign:null,
+  t0:0,plan:null,ana:null,base:null,hist:[],sel:null,gView:'machine',gProc:'全部',gZoom:6
+};
+function seedOrders(){
+  const os=DATA.orders.map((o,i)=>{
+    const big=o.qty>=8000, key=/工程机械|高空作业车|旋挖/.test(o.pn);
+    let prio='普通';
+    if(key||big)prio='重点'; else if(i%7===3)prio='罚款';
+    return {...o,prio,rush:false,matReady:null};
+  });
+  return os;
+}
+function run(keepHist){
+  busy(true,'正在求解排产…');
+  setTimeout(()=>{
+    try{
+      if(keepHist&&ST.plan)ST.hist.push(JSON.parse(JSON.stringify({
+        orders:ST.orders,downs:ST.downs,locks:ST.locks,cfg:ST.cfg})));
+      ST.t0=Math.min(...ST.orders.map(o=>new Date(o.od+'T00:00:00').getTime()));
+      if(ST.plan){ST.prevAssign={};ST.plan.tasks.forEach(t=>ST.prevAssign[t.key]=t.lots.map(l=>l.mid))}
+      ST.plan=schedule(ST);
+      ST.ana=analyze(ST.plan,ST);
+      if(!ST.base)ST.base={kpi:{...ST.ana.kpi},res:ST.plan.res.map(r=>({wo:r.job.wo,no:r.job.no,late:r.late,fin:r.fin}))};
+      renderAll();
+    }catch(e){console.error(e);toast('排产失败：'+e.message)}
+    busy(false);
+    $('#bUndo').disabled=!ST.hist.length;
+  },30);
+}
+function snapshotBase(){
+  ST.base={kpi:{...ST.ana.kpi},res:ST.plan.res.map(r=>({wo:r.job.wo,no:r.job.no,late:r.late,fin:r.fin}))};
+}
+/* ======================= 总览 ======================= */
+function renderDash(){
+  const a=ST.ana,k=a.kpi,b=ST.base&&ST.base.kpi;
+  const d=(cur,base,inv)=>{
+    if(base==null)return '';
+    const x=cur-base;if(Math.abs(x)<0.05)return '<span class="dlt">与基准持平</span>';
+    const good=inv?x<0:x>0;
+    return `<span class="dlt ${good?'up':'down'}">${x>0?'+':''}${x.toFixed(1)} 对比基准</span>`;
+  };
+  let h=`<div class="kpis">
+    <div class="kpi ${k.onTime>=95?'ok':k.onTime>=85?'warn':'risk'}">
+      <div class="lab">准时交付率（首要目标）</div><div class="val">${k.onTime.toFixed(1)}<small>%</small></div>
+      <div class="dlt">${k.onTimeN}/${k.total} 张订单按期</div>${d(k.onTime,b&&b.onTime)}</div>
+    <div class="kpi p2"><div class="lab">设备平均负荷（次要目标）</div><div class="val">${k.util.toFixed(1)}<small>%</small></div>
+      <div class="dlt">${ST.machines.length} 台设备 · 跨度 ${k.makespan.toFixed(0)} 天</div></div>
+    <div class="kpi ${k.lateN?'warn':'ok'}"><div class="lab">延期订单</div><div class="val">${k.lateN}<small>张</small></div>
+      <div class="dlt">平均延误 ${k.avgLate.toFixed(1)} 天</div>${d(k.lateN,b&&b.lateN,true)}</div>
+    <div class="kpi ${k.risk1?'risk':'ok'}"><div class="lab">高危风险</div><div class="val">${k.risk1}<small>项</small></div>
+      <div class="dlt">另有 ${k.risk2} 项预警</div></div>
+    <div class="kpi"><div class="lab">换型总耗时</div><div class="val">${k.chgH.toFixed(0)}<small>h</small></div>
+      <div class="dlt">占全部占机 ${(k.chgH*H/(a.span*ST.machines.length)*100).toFixed(1)}%</div></div>
+  </div>`;
+
+  const r1=a.risks.filter(r=>r.lv===1),r2=a.risks.filter(r=>r.lv===2);
+  h+=`<div class="grid g2">
+  <div class="panel"><h3>风险高亮 <span class="sub">交期不达 / 产能超载 / 缺料 / 间隔超限</span><span class="sp"></span>
+    <span class="tag t-risk">高危 ${r1.length}</span><span class="tag t-warn">预警 ${r2.length}</span></h3>
+    <div class="pad"><div class="risklist">`;
+  if(!a.risks.length)h+=`<div class="empty">当前方案无风险项。</div>`;
+  [...r1,...r2].slice(0,60).forEach(r=>{
+    h+=`<div class="ri ${r.lv===1?'r1':''}"><div class="ic">${r.lv===1?'■':'▲'}</div>
+      <div class="tx"><b>${esc(r.type)}</b> · ${esc(r.msg)}</div></div>`;
+  });
+  h+=`</div></div></div>`;
+
+  h+=`<div class="panel"><h3>各工序负荷 <span class="sub">按设备型号汇总（R1）</span></h3><div class="pad">`;
+  PROCS.forEach(p=>{
+    const s=a.pcs[p];
+    h+=`<div class="bl"><div class="n">${p} · ${s.n}台</div>
+      <div class="t"><i style="width:${clamp(s.avg,0,100)}%;background:${PCOL[p]}"></i></div>
+      <div class="v">${s.avg.toFixed(0)}%</div></div>
+      <div class="hint" style="margin:2px 0 9px 128px">最高 ${s.max.toFixed(0)}% · 最低 ${s.min.toFixed(0)}% · 换型累计 ${s.chg.toFixed(0)}h</div>`;
+  });
+  h+=`</div></div></div>`;
+
+  // 交期分布
+  const buckets=[0,0,0,0,0];
+  ST.plan.res.forEach(r=>{
+    if(!r.ok)return;const L=r.late;
+    if(L<=-3)buckets[0]++;else if(L<=0)buckets[1]++;else if(L<=3)buckets[2]++;else if(L<=7)buckets[3]++;else buckets[4]++;
+  });
+  const labs=['提前3天以上','按期(0~3天余量)','逾期≤3天','逾期3-7天','逾期>7天'];
+  const cols=['#3FA9C9','#5FB97A','#E3A63A','#DE7F45','#E4574C'];
+  h+=`<div class="panel"><h3>交期达成分布</h3><div class="pad">`+
+    barChart(labs,buckets,cols,'张')+`</div></div>`;
+  $('#v-dash').innerHTML=h;
+}
+function barChart(labs,vals,cols,unit){
+  const W=720,BH=26,H0=labs.length*BH+16,mx=Math.max(...vals,1),LW=130;
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H0}" preserveAspectRatio="xMinYMin meet">`;
+  labs.forEach((l,i)=>{
+    const y=i*BH+8,w=(vals[i]/mx)*(W-LW-58);
+    s+=`<text class="stxt" x="0" y="${y+13}" style="font-size:11px">${esc(l)}</text>`;
+    s+=`<rect x="${LW}" y="${y+2}" width="${Math.max(w,1)}" height="15" fill="${cols[i%cols.length]}" rx="2"/>`;
+    s+=`<text class="stxt" x="${LW+w+6}" y="${y+14}" style="font-size:11px;fill:#8CA0B1">${vals[i]} ${unit||''}</text>`;
+  });
+  return s+`</svg>`;
+}
+/* ======================= 排产计划表 ======================= */
+let planFilter={q:'',risk:false,proc:'全部'};
+function renderPlan(){
+  const rs=ST.plan.res;
+  let h=`<div class="panel"><h3>排产计划 <span class="sub">订单 → 工序 → 机台 → 时间，点任意行查看排产依据</span><span class="sp"></span>
+   <input type="text" id="fq" placeholder="搜索订单号/规格/机台" value="${esc(planFilter.q)}" style="width:190px">
+   <label class="chk"><input type="checkbox" id="fr" ${planFilter.risk?'checked':''}>只看风险</label>
+   <button class="btn sm" id="expPlan">导出计划</button>
+   <button class="btn sm" id="expWO">导出工单</button></h3>
+  <div class="tw" style="max-height:66vh;overflow:auto"><table><thead><tr>
+  <th>订单号</th><th>工单号</th><th>品名 / 规格</th><th class="num">数量(m)</th><th>优先级</th><th>交期</th>
+  <th>拉丝机</th><th>拉丝起止</th><th>捻股机</th><th>捻股起止</th><th>合绳机</th><th>合绳起止</th>
+  <th>预计完工</th><th>交期结果</th><th></th></tr></thead><tbody>`;
+  let n=0;
+  rs.forEach(r=>{
+    const j=r.job;
+    const q=planFilter.q.trim().toLowerCase();
+    if(q&&!(j.no.toLowerCase().includes(q)||j.spec.toLowerCase().includes(q)||j.pn.toLowerCase().includes(q)||r.tasks.some(t=>t.mid.includes(q))))return;
+    const tol=tolOf(j.prio);
+    const bad=r.ok&&r.late>tol, warn=r.ok&&r.late>0&&r.late<=tol;
+    if(planFilter.risk&&!bad&&!warn&&r.ok)return;
+    n++;
+    const c=['','',''];
+    const tds=r.tasks.map(t=>`<td class="mono" title="${esc(t.lots.map(l=>l.mid+' '+l.dur.ql).join(' / '))}">${t.lots.length>1?t.lots.length+'台并行<br><span style="color:var(--dim);font-size:10.5px">'+esc(t.mid)+'</span>':t.mid}${t.locked?' <span class="tag t-lock">锁</span>':''}</td><td class="mono" style="color:var(--mut)">${fmtDT(t.s)} → ${fmtDT(t.e)}</td>`).join('');
+    h+=`<tr data-wo="${esc(j.wo)}" class="prow">
+      <td class="mono">${esc(j.no)}</td><td class="mono" style="color:var(--dim)">${esc(j.wo)}</td>
+      <td>${esc(j.pn)}<br><span style="color:var(--mut)">${esc(j.spec)}</span></td>
+      <td class="num">${j.qty.toLocaleString()}</td>
+      <td><span class="tag ${j.prio==='重点'?'t-p1':j.prio==='罚款'?'t-risk':'t-mut'}">${j.prio}</span>${j.rush?' <span class="tag t-warn">插单</span>':''}</td>
+      <td>${fmtD(j.due)}</td>${tds||'<td colspan="6" style="color:var(--risk)">未排入</td>'}
+      <td>${r.ok?fmtD(r.fin):'—'}</td>
+      <td>${r.ok?(r.late<=0?`<span class="tag t-ok">按期 富余${(-r.late).toFixed(1)}天</span>`:bad?`<span class="tag t-risk">逾期${r.late.toFixed(1)}天</span>`:`<span class="tag t-warn">逾期${r.late.toFixed(1)}天(容忍内)</span>`):'<span class="tag t-risk">无产能</span>'}</td>
+      <td><button class="btn sm wby" data-wo="${esc(j.wo)}">依据</button></td></tr>`;
+  });
+  h+=`</tbody></table></div><div class="pad hint">共 ${n} 张订单 · 单击行或"依据"查看每条排程结论的约束驱动来源（R1–R10）；在依据面板可锁定机台/调整优先级后重算。</div></div>`;
+  $('#v-plan').innerHTML=h;
+  $('#fq').oninput=e=>{planFilter.q=e.target.value;renderPlan();const i=$('#fq');i.focus();i.setSelectionRange(i.value.length,i.value.length)};
+  $('#fr').onchange=e=>{planFilter.risk=e.target.checked;renderPlan()};
+  $('#expPlan').onclick=exportPlan; $('#expWO').onclick=exportWO;
+  $$('.prow').forEach(tr=>tr.onclick=e=>{if(e.target.tagName!=='BUTTON')openWhy(tr.dataset.wo)});
+  $$('.wby').forEach(b=>b.onclick=e=>{e.stopPropagation();openWhy(b.dataset.wo)});
+}
+/* ======================= 甘特图 ======================= */
+function renderGantt(){
+  const a=ST.ana,t0=ST.t0,t1=a.horizonEnd;
+  const days=Math.ceil((t1-t0)/D1)+1;
+  const pxh=ST.gZoom; // px per hour
+  const W=days*24*pxh;
+  let h=`<div class="panel"><h3>甘特图 <span class="sub">${ST.gView==='machine'?'设备视角：每台机台的排程与换型':'订单视角：一张订单的三道工序流转'}</span><span class="sp"></span>
+    <select id="gv" style="width:auto"><option value="machine"${ST.gView==='machine'?' selected':''}>设备视角</option><option value="order"${ST.gView==='order'?' selected':''}>订单视角</option></select>
+    <select id="gp" style="width:auto">${['全部',...PROCS].map(p=>`<option${ST.gProc===p?' selected':''}>${p}</option>`).join('')}</select>
+    <button class="btn sm" id="zo">－</button><button class="btn sm" id="zi">＋</button>
+    <button class="btn sm" id="expG">导出甘特图</button></h3>
+    <div class="gwrap"><div class="gscroll" id="gsc"><div style="min-width:${W+152}px">`;
+  // 头
+  h+=`<div class="ghead"><div class="ghl">时间轴</div><div class="ghd" style="width:${W}px">`;
+  for(let d=0;d<days;d++){
+    h+=`<div class="gtick day" style="left:${d*24*pxh}px">${fmtD(t0+d*D1).slice(5)}</div>`;
+    if(pxh>=5)for(const hh of [8,12,16,20])h+=`<div class="gtick" style="left:${(d*24+hh)*pxh}px">${hh}</div>`;
+  }
+  h+=`</div></div>`;
+  const rows=[];
+  if(ST.gView==='machine'){
+    const ms=ST.machines.filter(m=>ST.gProc==='全部'||m.proc===ST.gProc);
+    const used={};ST.plan.tasks.forEach(t=>used[t.mid]=1);
+    ms.sort((x,y)=>(PROCS.indexOf(x.proc)-PROCS.indexOf(y.proc))||x.id.localeCompare(y.id));
+    ms.forEach(m=>{
+      const ts=ST.plan.tasks.filter(t=>t.lots.some(l=>l.mid===m.id));
+      if(!ts.length&&!used[m.id]&&ms.length>40)return;
+      rows.push({mid:m.id,proc:m.proc,lab:m.id+' '+m.name.replace(/拉丝机|捻股机|合绳机/,''),sub:(a.util[m.id]?a.util[m.id].pct:0).toFixed(0)+'%',ts,
+        downs:ST.downs.filter(d=>d.mid===m.id)});
+    });
+  }else{
+    const rs=[...ST.plan.res].sort((x,y)=>x.job.due-y.job.due).slice(0,120);
+    rs.forEach(r=>rows.push({lab:r.job.no,sub:r.ok?(r.late>0?'+'+r.late.toFixed(1)+'d':'✓'):'—',
+      ts:r.tasks.filter(t=>ST.gProc==='全部'||t.proc===ST.gProc),downs:[],due:r.job.due}));
+  }
+  rows.forEach(r=>{
+    h+=`<div class="grow"${r.mid?' data-mid="'+esc(r.mid)+'" data-proc="'+esc(r.proc||'')+'"':''}><div class="glab"><span class="nm">${esc(r.lab)}</span><span class="ut">${esc(r.sub)}</span></div>
+      <div class="gtrack" style="width:${W}px">`;
+    (r.downs||[]).forEach(d=>{
+      h+=`<div class="gdown" style="left:${(d.s-t0)/H*pxh}px;width:${Math.max((d.e-d.s)/H*pxh,2)}px" title="设备故障停机"></div>`;
+    });
+    if(r.due!=null)h+=`<div class="gnow" style="left:${(r.due-t0)/H*pxh}px;border-color:var(--risk)" title="交期"></div>`;
+    r.ts.forEach(t=>{
+      const rr=ST.plan.res.find(z=>z.job.wo===t.wo);
+      const late=rr&&rr.ok&&rr.late>tolOf(rr.job.prio);
+      const lots=ST.gView==='machine'?t.lots.filter(l=>l.mid===r.mid):t.lots;
+      lots.forEach((l,li)=>{
+        const x=(l.chS-t0)/H*pxh, cw=(l.chE-l.chS)/H*pxh, w=(l.e-l.chE)/H*pxh;
+        if(cw>0.6)h+=`<div class="gchg" style="left:${x}px;width:${cw}px" title="换型 ${l.ch.h}h"></div>`;
+        h+=`<div class="gbar${late?' late':''}${t.locked?' locked':''}${ST.sel===t.key?' sel':''}" data-k="${esc(t.key)}" data-li="${t.lots.indexOf(l)}"
+          style="left:${x+cw}px;width:${Math.max(w,3)}px;background:${PCOL[t.proc]}"
+          title="${esc(t.no)} ${t.proc} 机台${l.mid}${t.lots.length>1?' 第'+(t.lots.indexOf(l)+1)+'/'+t.lots.length+'批':''}&#10;${fmtDT(l.s)} → ${fmtDT(l.e)}&#10;${fmtH((l.e-l.chE)/H)} · ${l.dur.ql}">${
+          w>52?esc(ST.gView==='machine'?t.no:t.proc+' '+l.mid):(w>20?esc(t.proc):'')}</div>`;
+      });
+    });
+    h+=`</div></div>`;
+  });
+  h+=`</div></div><div class="glegend">
+    <span><i class="sw" style="background:#3FA9C9"></i>拉丝</span>
+    <span><i class="sw" style="background:#E0A94B"></i>捻股</span>
+    <span><i class="sw" style="background:#5FB97A"></i>合绳</span>
+    <span><i class="sw" style="background:repeating-linear-gradient(45deg,#4A5766,#4A5766 3px,#3A4653 3px,#3A4653 6px)"></i>换型</span>
+    <span><i class="sw" style="background:rgba(228,87,76,.35);border:1px solid #E4574C"></i>设备停机</span>
+    <span>条底红线＝该订单逾期 · ◆＝人工锁定</span>
+    <span style="color:var(--p2)">按住色块可拖动：左右改开工时刻，设备视角下上下拖可换机台，松手即锁定并重算</span></div></div>`;
+  $('#v-gantt').innerHTML=h;
+  $('#gv').onchange=e=>{ST.gView=e.target.value;renderGantt()};
+  $('#gp').onchange=e=>{ST.gProc=e.target.value;renderGantt()};
+  $('#zi').onclick=()=>{ST.gZoom=clamp(ST.gZoom*1.5,0.6,40);renderGantt()};
+  $('#zo').onclick=()=>{ST.gZoom=clamp(ST.gZoom/1.5,0.6,40);renderGantt()};
+  $('#expG').onclick=exportGantt;
+  const sc=$('#gsc');
+  if(ST._gscroll){sc.scrollLeft=ST._gscroll.x;sc.scrollTop=ST._gscroll.y;ST._gscroll=null}
+  sc.addEventListener('scroll',()=>{ST._gscroll={x:sc.scrollLeft,y:sc.scrollTop}});
+  bindGanttDrag(sc,pxh,t0);
+}
+/* ======================= 甘特图拖拽（人工干预） ======================= */
+function bindGanttDrag(sc,pxh,t0){
+  let dg=null;
+  const down=e=>{
+    const bar=e.target.closest&&e.target.closest('.gbar');
+    if(!bar)return;
+    const t=ST.plan.tasks.find(x=>x.key===bar.dataset.k);if(!t)return;
+    dg={bar,t,li:+bar.dataset.li,x0:e.clientX,y0:e.clientY,
+        left:parseFloat(bar.style.left)||0,moved:false};
+    bar.style.zIndex=20;bar.style.opacity='.82';
+    try{bar.setPointerCapture(e.pointerId)}catch(_){}
+    e.preventDefault();
+  };
+  const move=e=>{
+    if(!dg)return;
+    const dx=e.clientX-dg.x0,dy=e.clientY-dg.y0;
+    if(Math.abs(dx)>3||Math.abs(dy)>3)dg.moved=true;
+    dg.bar.style.left=(dg.left+dx)+'px';
+    dg.bar.title=`拖动中：${(dx/pxh>=0?'+':'')}${(dx/pxh).toFixed(1)} 小时`;
+  };
+  const up=e=>{
+    if(!dg)return;
+    const d=dg;dg=null;
+    d.bar.style.opacity='';d.bar.style.zIndex='';
+    if(!d.moved){ST.sel=d.t.key;openWhy(d.t.wo,d.t.proc);return}
+    const dh=Math.round((e.clientX-d.x0)/pxh*4)/4; // 15 分钟粒度
+    let mid=null;
+    if(ST.gView==='machine'){
+      d.bar.style.visibility='hidden';
+      const el=document.elementFromPoint(e.clientX,e.clientY);
+      d.bar.style.visibility='';
+      const row=el&&el.closest?el.closest('.grow'):null;
+      if(row&&row.dataset.mid)mid=row.dataset.mid;
+    }
+    applyGanttDrag(d.t,d.li,dh,mid);
+  };
+  sc.addEventListener('pointerdown',down);
+  sc.addEventListener('pointermove',move);
+  sc.addEventListener('pointerup',up);
+  sc.addEventListener('pointercancel',()=>{dg=null});
+}
+function applyGanttDrag(t,li,dh,mid){
+  const lot=t.lots[li];if(!lot)return;
+  let nm=mid||lot.mid;
+  if(mid&&mid!==lot.mid){
+    const ok=eligible(t.proc,t.job,ST.machines).some(m=>m.id===mid);
+    if(!ok){toast(`机台 ${mid} 不能加工本规格（R1 设备—规格适配矩阵），已保持原机台`);nm=lot.mid}
+  }
+  let ns=lot.chS+dh*H;
+  if(ns<ST.t0)ns=ST.t0;
+  ST.locks=ST.locks.filter(l=>l.key!==t.key);
+  ST.locks.push({key:t.key,wo:t.wo,proc:t.proc,manual:true,
+    lots:t.lots.map((l,i)=>i===li?{mid:nm,s:ns}:{mid:l.mid,s:l.chS})});
+  run(true);
+  toast(`${t.no} ${t.proc} 已${nm!==lot.mid?'改派至 '+nm+' 并':''}调整开工 ${dh>=0?'+':''}${dh} 小时，已锁定重算`);
+}
+/* ======================= 排产依据抽屉 ======================= */
+function openWhy(wo,focus){
+  const r=ST.plan.res.find(x=>x.job.wo===wo);if(!r)return;
+  const j=r.job,sp=j.sp;
+  $('#dwTitle').textContent='排产依据 · '+j.no;
+  let h=`<dl class="kv">
+   <dt>订单号</dt><dd class="mono">${esc(j.no)}</dd>
+   <dt>工单号</dt><dd class="mono">${esc(j.wo)}</dd>
+   <dt>品名</dt><dd>${esc(j.pn)}</dd>
+   <dt>规格</dt><dd>${esc(j.spec)}</dd>
+   <dt>数量</dt><dd>${j.qty.toLocaleString()} m ／ ${Math.round(j.kg).toLocaleString()} kg</dd>
+   <dt>交期</dt><dd>${fmtD(j.due)}　<span class="tag ${j.prio==='重点'?'t-p1':j.prio==='罚款'?'t-risk':'t-mut'}">${j.prio}</span></dd>
+   <dt>预计完工</dt><dd>${r.ok?fmtD(r.fin):'—'} ${r.ok?(r.late<=0?`<span class="tag t-ok">按期</span>`:r.late>tolOf(j.prio)?`<span class="tag t-risk">逾期${r.late.toFixed(1)}天</span>`:`<span class="tag t-warn">逾期${r.late.toFixed(1)}天·容忍内</span>`):''}</dd>
+  </dl>`;
+  h+=`<div class="why"><b>工艺参数推导</b><br>
+   绳径 ${sp.D}mm，结构 ${esc(sp.struct)}，${sp.n} 股 + ${sp.core} 绳芯，表面 ${sp.surf}${sp.plastic?'（注塑/涂塑）':''}。<br>
+   股径 ≈ D·sin(π/${sp.nOuter})/(1+sin(π/${sp.nOuter})) = <b>${sp.dStrand}mm</b>；
+   钢丝径 ≈ 股径/${(sp.dStrand/sp.dWire).toFixed(0)} = <b>${sp.dWire}mm</b>（按 ${sp.wires} 丝股层数折算）。<br>
+   拉丝量 = 成品重 ×${ST.cfg.scrap}（损耗）= ${j.drawKg.toLocaleString()} kg；股长 = 绳长 ×${sp.n} 股 ×${ST.cfg.lay}（捻缩）= ${j.strandM.toLocaleString()} m。</div>`;
+  r.tasks.forEach((t,i)=>{
+    const cls=['','w2','w3'][i];
+    const cands=eligible(t.proc,j,ST.machines).length;
+    let src='';
+    if(t.proc==='拉丝')src=`设备额定：${t.lots.map(l=>l.mid+':'+l.dur.rate.toLocaleString()).join('、')} kg/天（由《产品额定》拉丝表按全厂月产 2900t 口径归一化）；可加工丝径区间 ${ST.machines.find(m=>m.id===t.lots[0].mid).lo}–${ST.machines.find(m=>m.id===t.lots[0].mid).hi}mm，覆盖本单 ${sp.dWire}mm`;
+    if(t.proc==='捻股')src=`工艺行「${esc(j.tw.name)}」股径 ${j.tw.key}mm（与推导股径 ${sp.dStrand}mm 偏差 ${j.tw.dev.toFixed(2)}mm）基准 ${j.tw.base} m/min × 机台系数 ${ST.machines.find(m=>m.id===t.lots[0].mid).fac} = ${t.dur.rate} m/min`;
+    if(t.proc==='合绳')src=`工艺行「${esc(j.rp.name)} ${esc(j.rp.key)}」${j.rp.exact?'（规格精确命中）':'（按同结构最近绳径匹配）'} 基准 ${j.rp.base} m/min × 机台系数 ${ST.machines.find(m=>m.id===t.lots[0].mid).fac} = ${t.dur.rate} m/min`;
+    const lotHtml=t.lots.map((l,li)=>`<div style="margin:3px 0 0 10px;color:var(--mut)">▸ 第 ${li+1}/${t.lots.length} 批 · 机台 <b style="color:var(--ink)">${l.mid}</b> · ${l.dur.ql} · ${fmtDT(l.s)} → ${fmtDT(l.e)}（${fmtH((l.e-l.chE)/H)}）${l.ch.h>0?` · 换型 ${l.ch.h}h`:''}</div>`).join('');
+    h+=`<div class="why ${cls}" ${focus===t.proc?'style="box-shadow:0 0 0 1px var(--line2)"':''}>
+      <b>${i+1}. ${t.proc} → ${t.lots.length>1?t.lots.length+' 台并行':'机台 '+t.mid}</b>${t.locked?' <span class="tag t-lock">人工锁定</span>':''}<br>
+      <span style="color:var(--mut)">开工 ${fmtDT(t.s)}（${shiftOf(t.s)}）→ 完工 ${fmtDT(t.e)}</span>
+      ${lotHtml}
+      <div style="margin-top:6px"><u>R1 排产单位</u>：本规格共 ${cands} 台${t.proc}设备可加工，按"紧急程度 → 交期先后"择机（R1/R9）；${t.lots.length>1?`批量较大，拆为 ${t.lots.length} 批按各机台速度比例并行投产，使各批同步完工。`:'选中该机台因其可最早完工且换型代价最低。'}</div>
+      <div><u>产能口径</u>：${src}</div>
+      <div><u>R5 换型</u>：${esc(t.ch.why)}${t.ch.h>0?`，占用 ${fmtDT(t.chS)}–${fmtDT(t.chE)}`:''}</div>
+      <div><u>R2 班次</u>：两班倒 12h／天，24h 连续生产，不做班次断点切分。</div>
+      <div style="margin-top:6px"><u>人工改派</u>：
+        <select class="reassign" data-key="${esc(t.key)}" style="width:auto;display:inline-block;padding:2px 6px;font-size:11.5px">
+          <option value="">保持算法结果（${esc(t.mid)}）</option>
+          ${eligible(t.proc,j,ST.machines).slice(0,60).map(m=>`<option value="${m.id}">改派到 ${m.id} ${esc(m.name)}</option>`).join('')}
+        </select></div>
+      ${i>0?`<div><u>R6 工序间隔</u>：与上道工序间隔 ${(t.gap/24).toFixed(2)} 天${t.gap/24>ST.cfg.maxGap?'，<span style="color:var(--risk)">已超 3 天上限</span>':'，满足 ≤3 天'}。${t.shifted?'（为压缩间隔，已将本工序右移至最晚可行时刻）':''}</div>`:''}
+    </div>`;
+  });
+  const tol=tolOf(j.prio);
+  h+=`<div class="why ${r.ok&&r.late>tol?'wr':''}"><b>R8/R9 交期与优先级结论</b><br>
+    客户类别「${j.prio}」→ 容忍 ${tol} 天${j.prio==='罚款'?'（硬约束，逾期即罚款）':'（软约束）'}；
+    ${r.ok?(r.late<=0?`完工早于交期 ${(-r.late).toFixed(1)} 天，判定按期。`:`完工晚于交期 ${r.late.toFixed(1)} 天，${r.late>tol?'<b>超出容忍，判定交期不达</b>。':'在容忍范围内。'}`):'未能排入，缺少可用设备产能。'}
+    ${j.rush?'<br>本单为紧急插单（R10），已置于排序最前，优先占用可用机台。':''}</div>`;
+  $('#dwBody').innerHTML=h;
+  $('#dwFoot').innerHTML=`
+    <select id="dwPrio" style="width:auto;flex:0 0 auto">${['普通','重点','罚款'].map(p=>`<option${j.prio===p?' selected':''}>${p}</option>`).join('')}</select>
+    <button class="btn sm" id="dwLock">锁定当前机台与时间</button>
+    <button class="btn sm" id="dwUnlock">解除锁定</button>
+    <button class="btn sm pri" id="dwApply">应用并重算</button>`;
+  $('#dwLock').onclick=()=>{
+    r.tasks.forEach(t=>{
+      ST.locks=ST.locks.filter(l=>l.key!==t.key);
+      ST.locks.push({key:t.key,wo:j.wo,proc:t.proc,lots:t.lots.map(l=>({mid:l.mid,s:l.chS}))});
+    });toast('已锁定 '+j.no+' 的 3 道工序，重算时保持不变');
+  };
+  $('#dwUnlock').onclick=()=>{ST.locks=ST.locks.filter(l=>l.wo!==j.wo);toast('已解除该订单锁定')};
+  $('#dwApply').onclick=()=>{
+    const o=ST.orders.find(x=>x.wo===j.wo);if(o)o.prio=$('#dwPrio').value;
+    let moved=0;
+    $$('.reassign').forEach(sel=>{
+      if(!sel.value)return;
+      const t=r.tasks.find(x=>x.key===sel.dataset.key);if(!t)return;
+      ST.locks=ST.locks.filter(l=>l.key!==t.key);
+      ST.locks.push({key:t.key,wo:j.wo,proc:t.proc,lots:[{mid:sel.value,s:t.chS}]});
+      moved++;
+    });
+    closeDrawer();run(true);
+    toast(moved?`已改派 ${moved} 道工序并重算（改派结果以锁定形式保留）`:'已按人工调整重算');
+  };
+  $('#drawer').classList.add('on');$('#scrim').classList.add('on');
+}
+function closeDrawer(){$('#drawer').classList.remove('on');$('#scrim').classList.remove('on')}
+/* ======================= 插单与异常重排 ======================= */
+function renderDis(){
+  const specs=[...new Set(DATA.orders.map(o=>o.spec))].sort();
+  const ms=ST.machines;
+  let h=`<div class="grid g3">
+  <div class="panel"><h3>紧急插单 <span class="sub">R10 · 约每周 5 次</span></h3><div class="pad">
+    <label class="f">订单号</label><input type="text" id="iNo" value="JJ-${Date.now().toString().slice(-6)}">
+    <label class="f">品名</label><input type="text" id="iPn" value="光面压实钢丝绳">
+    <label class="f">规格</label><select id="iSpec">${specs.slice(0,400).map(s=>`<option>${esc(s)}</option>`).join('')}</select>
+    <div class="row"><div><label class="f">数量 (m)</label><input type="number" id="iQty" value="2000"></div>
+    <div><label class="f">交期</label><input type="date" id="iDue"></div></div>
+    <label class="f">客户类别</label><select id="iPrio"><option>重点</option><option>罚款</option><option>普通</option></select>
+    <label class="chk" style="margin-top:9px"><input type="checkbox" id="iRush" checked>标记为紧急插单（排序置顶）</label>
+    <button class="btn pri" id="bIns" style="margin-top:11px;width:100%">插入并重排</button>
+    <div class="hint">插单后系统在保留已锁定任务的前提下全局重算，并在右侧量化其对全部订单交期的影响。</div>
+  </div></div>
+
+  <div class="panel"><h3>设备异常停机</h3><div class="pad">
+    <label class="f">设备</label><select id="dMid">${ms.map(m=>`<option value="${m.id}">${m.proc} ${m.id} ${esc(m.name)}</option>`).join('')}</select>
+    <div class="row"><div><label class="f">停机开始</label><input type="datetime-local" id="dS"></div>
+    <div><label class="f">停机时长 (h)</label><input type="number" id="dH" value="24"></div></div>
+    <label class="f">原因</label><input type="text" id="dWhy" value="主电机故障，待外部维修">
+    <button class="btn pri" id="bDown" style="margin-top:11px;width:100%">登记停机并重排</button>
+    <div id="downList" style="margin-top:11px"></div>
+  </div></div>
+
+  <div class="panel"><h3>物料 / 外协延迟</h3><div class="pad">
+    <label class="f">订单</label><select id="mWo">${ST.orders.slice(0,300).map(o=>`<option value="${esc(o.wo)}">${esc(o.no)} · ${esc(o.spec)}</option>`).join('')}</select>
+    <label class="f">原材料实际到货日</label><input type="date" id="mDate">
+    <div class="hint">热处理为外协加工，到货后检测约 2 小时；系统将该时刻作为拉丝最早开工约束。</div>
+    <button class="btn pri" id="bMat" style="margin-top:11px;width:100%">登记延迟并重排</button>
+    <div id="matList" style="margin-top:11px"></div>
+  </div></div></div>`;
+
+  // 影响评估
+  h+=`<div class="panel" id="optPanel" style="display:none"><h3>插单处理选项对比 <span class="sub">同一张插单的三种处理方式，选一个采用（R8/R9/R10）</span></h3><div class="pad" id="optBody"></div></div>`;
+  h+=`<div class="panel"><h3>重排影响量化评估 <span class="sub">当前方案 对比 基准方案</span><span class="sp"></span>
+    <button class="btn sm" id="bBase">把当前方案设为基准</button>
+    <button class="btn sm" id="bReset">清除全部扰动</button></h3><div class="pad" id="impact"></div></div>`;
+  $('#v-dis').innerHTML=h;
+  const dd=new Date(ST.t0+12*D1);
+  $('#iDue').value=fmtD(dd.getTime());
+  $('#dS').value=fmtD(ST.t0+3*D1)+'T08:00';
+  $('#mDate').value=fmtD(ST.t0+5*D1);
+  renderDownList();renderMatList();renderImpact();
+  $('#bIns').onclick=()=>{
+    const no=$('#iNo').value.trim()||'JJ';
+    const nd={no,wo:no+'-INS-'+(ST.orders.length+1),od:fmtD(ST.t0),due:$('#iDue').value,
+      pn:$('#iPn').value,spec:$('#iSpec').value,coat:'绳涂油',qty:+$('#iQty').value||1000,
+      kg:(+$('#iQty').value||1000)*0.9,done:'未结束',prio:$('#iPrio').value,rush:true,matReady:null};
+    buildInsertOptions(nd);
+  };
+  $('#bDown').onclick=()=>{
+    const s=new Date($('#dS').value).getTime();
+    ST.downs.push({mid:$('#dMid').value,s,e:s+(+$('#dH').value||8)*H,why:$('#dWhy').value});
+    run(true);toast('停机已登记，受影响任务已自动改派/顺延');
+  };
+  $('#bMat').onclick=()=>{
+    const wo=$('#mWo').value,d=$('#mDate').value;
+    const o=ST.orders.find(x=>x.wo===wo);if(!o)return;
+    o.matReady=d;
+    ST.mats=ST.mats.filter(m=>m.wo!==wo);
+    ST.mats.push({wo,date:d,late:true,msg:`订单 ${o.no} 原材料延迟至 ${d} 到货（含外协热处理到货检测 2h），拉丝最早开工被推迟`});
+    run(true);toast('物料延迟已登记并重排');
+  };
+  $('#bBase').onclick=()=>{snapshotBase();renderAll();toast('已将当前方案设为对比基准')};
+  $('#bReset').onclick=()=>{ST.downs=[];ST.mats=[];ST.orders.forEach(o=>o.matReady=null);
+    ST.orders=ST.orders.filter(o=>!o.rush);run(true);toast('已清除全部扰动');};
+}
+function renderDownList(){
+  const e=$('#downList');if(!e)return;
+  e.innerHTML=ST.downs.length?ST.downs.map((d,i)=>`<div class="ri r1"><div class="ic">■</div><div class="tx">
+    <b>${d.mid}</b> ${fmtDT(d.s)} → ${fmtDT(d.e)}（${((d.e-d.s)/H).toFixed(0)}h）<br>
+    <span style="color:var(--mut)">${esc(d.why||'')}</span></div>
+    <button class="btn sm rmD" data-i="${i}">移除</button></div>`).join(''):'<div class="hint">暂无停机记录。</div>';
+  $$('.rmD').forEach(b=>b.onclick=()=>{ST.downs.splice(+b.dataset.i,1);run(true)});
+}
+function renderMatList(){
+  const e=$('#matList');if(!e)return;
+  e.innerHTML=ST.mats.length?ST.mats.map((m,i)=>`<div class="ri"><div class="ic">▲</div>
+    <div class="tx">${esc(m.msg)}</div><button class="btn sm rmM" data-i="${i}">移除</button></div>`).join(''):'<div class="hint">暂无物料延迟记录。</div>';
+  $$('.rmM').forEach(b=>b.onclick=()=>{
+    const m=ST.mats[+b.dataset.i];const o=ST.orders.find(x=>x.wo===m.wo);if(o)o.matReady=null;
+    ST.mats.splice(+b.dataset.i,1);run(true)});
+}
+function renderImpact(){
+  const e=$('#impact');if(!e)return;
+  if(!ST.base){e.innerHTML='<div class="hint">尚无基准方案。</div>';return}
+  const k=ST.ana.kpi,b=ST.base.kpi;
+  const cur={};ST.plan.res.forEach(r=>cur[r.job.wo]=r);
+  const moved=[];
+  ST.base.res.forEach(x=>{
+    const c=cur[x.wo];if(!c||!c.ok||x.late==null)return;
+    const d=c.late-x.late;
+    if(Math.abs(d)>0.05)moved.push({no:x.no,from:x.late,to:c.late,d,fin:c.fin});
+  });
+  moved.sort((a,b2)=>b2.d-a.d);
+  const worse=moved.filter(m=>m.d>0),better=moved.filter(m=>m.d<0);
+  const nu=ST.plan.res.filter(r=>!ST.base.res.some(x=>x.wo===r.job.wo));
+  let h=`<div class="kpis" style="margin-bottom:12px">
+    <div class="kpi ${k.onTime>=b.onTime?'ok':'risk'}"><div class="lab">准时交付率</div>
+      <div class="val">${k.onTime.toFixed(1)}<small>%</small></div>
+      <div class="dlt ${k.onTime>=b.onTime?'up':'down'}">基准 ${b.onTime.toFixed(1)}% → ${(k.onTime-b.onTime>=0?'+':'')}${(k.onTime-b.onTime).toFixed(1)}pt</div></div>
+    <div class="kpi ${moved.length?'warn':'ok'}"><div class="lab">交期被改变的订单</div><div class="val">${moved.length}<small>张</small></div>
+      <div class="dlt">恶化 ${worse.length} · 改善 ${better.length}</div></div>
+    <div class="kpi ${worse.length?'risk':'ok'}"><div class="lab">累计新增延误</div>
+      <div class="val">${worse.reduce((a,m)=>a+m.d,0).toFixed(1)}<small>天</small></div>
+      <div class="dlt">最大单张 ${worse.length?worse[0].d.toFixed(1):0} 天</div></div>
+    <div class="kpi p2"><div class="lab">新增订单</div><div class="val">${nu.length}<small>张</small></div>
+      <div class="dlt">插单纳入后重排</div></div></div>`;
+  if(moved.length){
+    h+=`<div class="tw"><table><thead><tr><th>订单号</th><th class="num">基准偏差(天)</th><th class="num">当前偏差(天)</th><th class="num">变化</th><th>当前完工</th></tr></thead><tbody>`;
+    moved.slice(0,40).forEach(m=>{
+      h+=`<tr><td class="mono">${esc(m.no)}</td><td class="num">${m.from.toFixed(1)}</td><td class="num">${m.to.toFixed(1)}</td>
+      <td class="num" style="color:${m.d>0?'var(--risk)':'var(--ok)'}">${m.d>0?'+':''}${m.d.toFixed(1)}</td><td>${fmtD(m.fin)}</td></tr>`;
+    });
+    h+=`</tbody></table></div>`;
+  }else h+=`<div class="hint">与基准方案相比，尚无订单交期发生变化。</div>`;
+  e.innerHTML=h;
+}
+/* ======================= 生产数据分析（加分任务） ======================= */
+function procOfQuality(q){
+  const s=(q.loc||'')+' '+(q.desc||'')+' '+(q.mat||'');
+  if(/捻股/.test(s))return '捻股';
+  if(/合绳/.test(s))return '合绳';
+  if(/拉丝|钢丝(?!绳)/.test(s))return '拉丝';
+  return '其他';
+}
+function causeCat(q){
+  const s=(q.cause||'')+' '+(q.desc||'');
+  if(/停电|电网|设备|故障|工装/.test(s))return '设备与外部条件';
+  if(/强度|материал|原材|钢丝规格|涂塑/.test(s))return '来料/半成品质量';
+  if(/工艺|捻距|参数|按工单|未严格|操作|排线|焊接/.test(s))return '工艺执行与操作';
+  if(/查找|未明/.test(s))return '原因待查';
+  return '其他';
+}
+function renderAna(){
+  const Q=DATA.quality.map(q=>({...q,proc:procOfQuality(q),cc:causeCat(q)}));
+  const byProc={},byCls={},byCause={};
+  Q.forEach(q=>{byProc[q.proc]=(byProc[q.proc]||0)+1;byCls[q.cls]=(byCls[q.cls]||0)+1;byCause[q.cc]=(byCause[q.cc]||0)+1});
+  DATA.qsum.forEach(s=>{const p=/拉丝/.test(s.phen)?'拉丝':'其他';byProc[p]=(byProc[p]||0)+s.batch;byCls[s.phen]=(byCls[s.phen]||0)+s.batch;
+    byCause['工艺执行与操作']=(byCause['工艺执行与操作']||0)+s.batch});
+  const a=ST.ana;
+  let h=`<div class="panel"><h3>① 各工序质量问题分类汇总与原因分析 <span class="sub">数据源：典型质量案例（${DATA.quality.length} 例明细 + ${DATA.qsum.reduce((x,y)=>x+y.batch,0)} 批次汇总）</span></h3>
+   <div class="pad"><div class="grid g3">
+   <div><div class="hint" style="margin:0 0 7px">按工序分布</div>${barChart(Object.keys(byProc),Object.values(byProc),['#3FA9C9','#E0A94B','#5FB97A','#8CA0B1'],'例')}</div>
+   <div><div class="hint" style="margin:0 0 7px">按问题现象分类</div>${barChart(Object.keys(byCls),Object.values(byCls),['#E4574C','#E3A63A','#DE7F45','#B57FE0','#3FA9C9','#5FB97A'],'例')}</div>
+   <div><div class="hint" style="margin:0 0 7px">初步原因归类</div>${barChart(Object.keys(byCause),Object.values(byCause),['#E4574C','#E3A63A','#3FA9C9','#8CA0B1'],'例')}</div>
+   </div>`;
+  h+=`<div class="hint" style="margin-top:14px;line-height:1.75"><b style="color:var(--ink)">分析结论</b><br>
+   · <b>捻股与合绳是问题高发工序</b>：打拧、股有缝、绳芯弯曲集中在捻股/合绳机台，均属"参数未按工单执行"或"上游半成品缺陷流入"；<br>
+   · <b>来料质量向下游传递</b>：1.77mm 钢丝强度仅 2146MPa 导致捻股断丝压伤，说明拉丝工序的在线检查是第一道闸门；<br>
+   · <b>外部条件（停电）造成不可修复损失</b>：3000m 整条生产到 2720m 打扭切断，长单一次性生产的风险敞口大，排产上应优先安排在负荷平稳时段；<br>
+   · <b>处置以补做/返修/切断为主</b>，均直接侵蚀已排产能——因此质量风险需要回写到排产（建议为高频问题规格预留 5% 产能缓冲）。</div>`;
+  h+=`<div class="tw" style="margin-top:12px;max-height:340px;overflow:auto"><table><thead><tr>
+    <th>日期</th><th>异常单号</th><th>工序</th><th>机台</th><th>物料/规格</th><th>问题分类</th><th>处置</th><th>原因分析</th><th>改进措施</th></tr></thead><tbody>`;
+  Q.forEach(q=>{h+=`<tr><td>${esc(q.date)}</td><td class="mono">${esc(q.no)}</td>
+    <td><span class="tag ${q.proc==='拉丝'?'t-p1':q.proc==='捻股'?'t-p2':'t-p3'}">${q.proc}</span></td>
+    <td class="mono">${esc(q.loc)}</td><td>${esc(q.mat)} ${esc(q.spec)}</td>
+    <td><span class="tag t-risk">${esc(q.cls)}</span></td><td>${esc(q.act)}</td>
+    <td style="white-space:normal;max-width:260px">${esc(q.cause)}</td>
+    <td style="white-space:normal;max-width:260px">${esc(q.fix)}</td></tr>`});
+  DATA.qsum.forEach(s=>{h+=`<tr><td>汇总</td><td class="mono">—</td><td><span class="tag t-p1">拉丝</span></td><td>—</td><td>—</td>
+    <td><span class="tag t-warn">${esc(s.phen)} ×${s.batch}</span></td><td>—</td>
+    <td style="white-space:normal">${esc(s.cause)}</td><td style="white-space:normal">${esc(s.fix)}</td></tr>`});
+  h+=`</tbody></table></div></div></div>`;
+
+  // 利用率
+  const U=Object.values(a.util).sort((x,y)=>y.pct-x.pct);
+  const cat=u=>u.pct>=85?'高负荷(≥85%)':u.pct>=55?'均衡(55-85%)':u.pct>=20?'偏低(20-55%)':'闲置(<20%)';
+  const cc={'高负荷(≥85%)':0,'均衡(55-85%)':0,'偏低(20-55%)':0,'闲置(<20%)':0};
+  U.forEach(u=>cc[cat(u)]++);
+  h+=`<div class="panel"><h3>② 各工序设备利用率汇总与原因分类 <span class="sub">基于当前排产方案计算</span><span class="sp"></span>
+    <button class="btn sm" id="expUtil">导出利用率报表</button></h3><div class="pad">
+    <div class="grid g2"><div>
+    <div class="hint" style="margin:0 0 7px">利用率分档（共 ${U.length} 台）</div>
+    ${barChart(Object.keys(cc),Object.values(cc),['#E4574C','#5FB97A','#E3A63A','#8CA0B1'],'台')}
+    <div class="hint" style="margin-top:12px;line-height:1.75"><b style="color:var(--ink)">利用率不均的原因归类</b><br>
+    · <b>规格区间限制（拉丝）</b>：演示机台各自覆盖不同丝径区间，订单规格分布会影响负荷，高负荷区间可通过机台分流改善；<br>
+    · <b>机台效率系数差异（捻股/合绳）</b>：同工序机台额定速度相差可达 ${(Math.max(...Object.values(DATA.ropeFac))/Math.min(...Object.values(DATA.ropeFac))).toFixed(0)} 倍，算法以"最早完工"为目标必然优先压向高速机台；<br>
+    · <b>换型成本牵引</b>：同规格连排可免换型，算法把同规格订单聚到同一机台，进一步放大机台间差异；<br>
+    · <b>瓶颈工序前后不同步</b>：捻股为最耗时工序（${a.pcs['捻股'].avg.toFixed(0)}% 平均负荷），拉丝（${a.pcs['拉丝'].avg.toFixed(0)}%）与合绳（${a.pcs['合绳'].avg.toFixed(0)}%）被瓶颈牵制而出现等待。<br>
+    <b style="color:var(--ink)">改善建议</b>：对高负荷机台做规格分流、把低速机台用于长周期大单、按规格族固定机台以摊薄换型。</div>
+    </div><div>
+    <div class="hint" style="margin:0 0 7px">机台负荷排行（前 22 台）</div><div class="bars">`;
+  U.slice(0,22).forEach(u=>{
+    h+=`<div class="bl"><div class="n">${u.m.proc} ${u.m.id}</div>
+      <div class="t"><i style="width:${clamp(u.pct,0,100)}%;background:${u.pct>=85?'var(--risk)':PCOL[u.m.proc]}"></i></div>
+      <div class="v">${u.pct.toFixed(0)}%</div></div>`;
+  });
+  h+=`</div></div></div>
+   <div class="tw" style="margin-top:12px;max-height:320px;overflow:auto"><table><thead><tr>
+     <th>工序</th><th>机台</th><th>名称</th><th class="num">任务数</th><th class="num">加工(h)</th><th class="num">换型(h)</th>
+     <th class="num">停机(h)</th><th class="num">负荷</th><th>分档</th></tr></thead><tbody>`;
+  U.forEach(u=>{h+=`<tr><td><span class="tag ${u.m.proc==='拉丝'?'t-p1':u.m.proc==='捻股'?'t-p2':'t-p3'}">${u.m.proc}</span></td>
+    <td class="mono">${u.m.id}</td><td>${esc(u.m.name)}</td><td class="num">${u.n}</td>
+    <td class="num">${(u.work/H).toFixed(0)}</td><td class="num">${(u.chg/H).toFixed(1)}</td>
+    <td class="num">${(u.down/H).toFixed(0)}</td><td class="num">${u.pct.toFixed(1)}%</td><td>${cat(u)}</td></tr>`});
+  h+=`</tbody></table></div></div></div>`;
+  $('#v-ana').innerHTML=h;
+  $('#expUtil').onclick=exportUtil;
+}
+/* ======================= 数据导入导出 ======================= */
+function renderData(){
+  $('#v-data').innerHTML=`<div class="grid g2">
+  <div class="panel"><h3>导入数据 <span class="sub">Excel / CSV</span></h3><div class="pad">
+    <label class="f">订单表（必需列：项目编号、订单日期、规格、业务数量；可选：预发货日、品名、计价数量、优先级）</label>
+    <input type="file" id="fOrders" accept=".xlsx,.xls,.csv">
+    <label class="f">设备表（可选，列：设备编号、设备名称、工序、规格下限、规格上限、日产能kg 或 速度系数）</label>
+    <input type="file" id="fMach" accept=".xlsx,.xls,.csv">
+    <label class="f">质量问题表（可选，列同《典型质量案例》）</label>
+    <input type="file" id="fQ" accept=".xlsx,.xls,.csv">
+    <div class="hint">列名自动模糊匹配，缺列时回落到内置口径；导入后自动重排并保留已锁定任务。
+      <br>也可先下载模板，按模板填写后导入。</div>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" id="tplO">下载订单模板</button>
+      <button class="btn" id="tplM">下载设备模板</button>
+      <button class="btn dgr" id="bSeed">恢复合成演示数据</button></div>
+  </div></div>
+  <div class="panel"><h3>导出交付物</h3><div class="pad">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn pri" id="e1">排产计划表 (xlsx)</button>
+      <button class="btn" id="e2">车间工单 (xlsx)</button>
+      <button class="btn" id="e3">计划清单 (csv)</button>
+      <button class="btn" id="e4">设备甘特图 (svg)</button>
+      <button class="btn" id="e8">订单甘特图 (svg)</button>
+      <button class="btn" id="e5">设备利用率报表 (xlsx)</button>
+      <button class="btn" id="e6">风险清单 (csv)</button>
+      <button class="btn" id="e7">全量方案包 (xlsx · 多表)</button>
+    </div>
+    <div class="hint">导出前会弹出确认框由你选择保存位置。计划表含每道工序的机台、起止、换型与排产依据摘要，可直接下发 MES / 车间。</div>
+    <div class="panel" style="margin-top:14px;background:#121A22"><h3 style="font-size:12px">当前数据概况</h3><div class="pad hint">
+      订单 ${ST.orders.length} 张 · 工序任务 ${ST.plan?ST.plan.tasks.length:0} 条 · 设备 ${ST.machines.length} 台
+      （拉丝 ${DATA.draw.length} / 捻股 ${Object.keys(DATA.twistFac).length} / 合绳 ${Object.keys(DATA.ropeFac).length}）<br>
+      捻股工艺行 ${Object.keys(DATA.twistBase).length} 条 · 合绳工艺行 ${Object.keys(DATA.ropeBase).length} 条 · 质量案例 ${DATA.quality.length} 例<br>
+      人工锁定 ${ST.locks.length} 条 · 停机 ${ST.downs.length} 条 · 物料延迟 ${ST.mats.length} 条
+    </div></div>
+  </div></div></div>`;
+  $('#fOrders').onchange=e=>readFile(e,importOrders);
+  $('#fMach').onchange=e=>readFile(e,importMach);
+  $('#fQ').onchange=e=>readFile(e,importQ);
+  $('#tplO').onclick=()=>tpl('订单模板',[{'项目编号':'DEMO-001','订单日期':'2026-08-07','预发货日':'2026-08-20','品名':'光面压实钢丝绳','规格':'22mm GT8ZH(8*K26WS+IWRC)','业务数量':2000,'计价数量':4800,'优先级':'重点'}]);
+  $('#tplM').onclick=()=>tpl('设备模板',[{'设备编号':'D001','设备名称':'演示拉丝机 01','工序':'拉丝','规格下限':0.4,'规格上限':0.75,'日产能kg':2100,'速度系数':''},{'设备编号':'T001','设备名称':'捻股机8201','工序':'捻股','规格下限':'','规格上限':'','日产能kg':'','速度系数':1}]);
+  $('#bSeed').onclick=()=>{ST.orders=seedOrders();ST.machines=buildMachines();ST.locks=[];ST.downs=[];ST.mats=[];ST.base=null;run(false);toast('已恢复合成演示数据')};
+  ['e1','e2','e3','e4','e5','e6','e7','e8'].forEach((id,i)=>$('#'+id).onclick=
+    [exportPlan,exportWO,exportList,()=>exportGantt('machine'),exportUtil,exportRisk,exportAll,()=>exportGantt('order')][i]);
+}
+function readFile(e,cb){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{try{
+    const wb=XLSX.read(ev.target.result,{type:'array',cellDates:true});
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+    cb(rows);
+  }catch(err){toast('读取失败：'+err.message)}};
+  r.readAsArrayBuffer(f);
+}
+function pick(row,keys,dft){
+  for(const k of Object.keys(row)){
+    const kk=String(k).replace(/\s/g,'');
+    for(const t of keys)if(kk.includes(t))if(row[k]!==''&&row[k]!=null)return row[k];
+  }
+  return dft;
+}
+function toDate(v,dft){
+  if(!v)return dft;
+  if(v instanceof Date)return fmtD(v.getTime());
+  const s=String(v).trim();
+  const d=new Date(s.replace(/\//g,'-'));
+  return isNaN(d)?dft:fmtD(d.getTime());
+}
+function importOrders(rows){
+  if(!rows.length)return toast('文件为空');
+  const os=[];
+  rows.forEach((r,i)=>{
+    const spec=String(pick(r,['规格','spec'],'')).trim();
+    const qty=+String(pick(r,['业务数量','数量','qty'],0)).replace(/[^\d.]/g,'')||0;
+    if(!spec||!qty)return;
+    const od=toDate(pick(r,['订单日期','单据日期','下单'],null),fmtD(Date.now()));
+    const due=toDate(pick(r,['预发货日','交期','预到货日','交货'],null),fmtD(new Date(od).getTime()+10*D1));
+    const no=String(pick(r,['项目编号','订单号','订单编号'],'IMP-'+(i+1)));
+    os.push({no,wo:String(pick(r,['内部订单','工单'],no+'-'+(i+1))),od,due,
+      pn:String(pick(r,['品名','产品'],'光面压实钢丝绳')),spec,coat:String(pick(r,['涂层'],'')),
+      qty,kg:+String(pick(r,['计价数量','重量','kg'],0)).replace(/[^\d.]/g,'')||0,
+      done:'未结束',prio:String(pick(r,['优先级','客户类别','等级'],'普通')).includes('重')?'重点':(String(pick(r,['优先级','客户类别'],'')).includes('罚')?'罚款':'普通'),
+      rush:/紧急|插单/.test(String(pick(r,['备注','标记','紧急'],''))),matReady:null});
+  });
+  if(!os.length)return toast('未识别到有效订单行，请检查"规格"与"数量"列');
+  ST.orders=os;ST.base=null;ST.locks=[];run(false);
+  toast(`已导入 ${os.length} 张订单并完成排产`);
+}
+function importMach(rows){
+  const L=[];
+  rows.forEach(r=>{
+    const id=String(pick(r,['设备编号','机台','编号','id'],'')).trim();
+    if(!id)return;
+    const proc=String(pick(r,['工序','proc'],'')).trim()||(id.startsWith('81')?'拉丝':id.startsWith('82')?'捻股':'合绳');
+    const o={id,name:String(pick(r,['设备名称','名称'],proc+id)),proc,type:proc+'机'};
+    if(proc==='拉丝'){o.lo=+pick(r,['规格下限','下限','lo'],0.2);o.hi=+pick(r,['规格上限','上限','hi'],5);
+      o.kgday=+pick(r,['日产能','产能','kgday'],2000);}
+    else o.fac=+pick(r,['速度系数','系数','fac'],1)||1;
+    L.push(o);
+  });
+  if(!L.length)return toast('未识别到设备行');
+  ST.machines=L;ST.locks=[];run(false);toast(`已导入 ${L.length} 台设备`);
+}
+function importQ(rows){
+  const q=rows.map(r=>({date:toDate(pick(r,['日期'],null),fmtD(Date.now())),no:String(pick(r,['异常单','编号'],'')),
+    loc:String(pick(r,['地点','机台'],'')),mat:String(pick(r,['物料'],'')),spec:String(pick(r,['规格'],'')),
+    qty:String(pick(r,['数量'],'')),cls:String(pick(r,['问题分类','分类','现象'],'其他')),
+    desc:String(pick(r,['问题描述','描述'],'')),act:String(pick(r,['处置'],'')),
+    cause:String(pick(r,['原因'],'')),fix:String(pick(r,['措施'],''))})).filter(x=>x.cls);
+  if(!q.length)return toast('未识别到质量数据');
+  DATA.quality=q;renderAna();toast(`已导入 ${q.length} 条质量记录`);
+  $('#tabs').querySelector('[data-v="v-ana"]').click();
+}
+/* ======================= 导出 ======================= */
+async function save(filename,data){
+  try{
+    const dl=await claude.use('downloads');
+    if(!dl){toast('当前视图不支持文件保存');return}
+    await dl.save({filename,data});
+    toast('已保存 '+filename);
+  }catch(e){
+    if(e&&e.code==='declined')toast('已取消保存');
+    else toast('保存失败：'+((e&&e.message)||e));
+  }
+}
+function sheetBuf(sheets){
+  const wb=XLSX.utils.book_new();
+  sheets.forEach(([nm,rows])=>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),nm.slice(0,31)));
+  return new Uint8Array(XLSX.write(wb,{bookType:'xlsx',type:'array'})).buffer;
+}
+function planRows(){
+  const R=[];
+  ST.plan.res.forEach(r=>{
+    const j=r.job,tol=tolOf(j.prio);
+    r.tasks.forEach((t,i)=>t.lots.forEach((l,li)=>R.push({
+      '订单号':j.no,'工单号':j.wo,'工序序号':i+1,'工序':t.proc,'批次':`${li+1}/${t.lots.length}`,
+      '品名':j.pn,'规格':j.spec,'加工量':l.dur.ql,'机台编号':l.mid,'机台名称':l.mname,
+      '换型开始':l.ch.h>0?fmtDT(l.chS):'','换型结束':l.ch.h>0?fmtDT(l.chE):'','换型(h)':l.ch.h,
+      '开工时间':fmtDT(l.chE),'完工时间':fmtDT(l.e),'加工时长(h)':+((l.e-l.chE)/H).toFixed(2),
+      '班次':shiftOf(l.chE),'与上道间隔(天)':i?+(t.gap/24).toFixed(2):'',
+      '人工锁定':t.locked?'是':'','交期':fmtD(j.due),'客户类别':j.prio,
+      '订单预计完工':r.ok?fmtD(r.fin):'','交期偏差(天)':r.ok?r.late:'',
+      '交期结论':r.ok?(r.late<=0?'按期':r.late>tol?'交期不达':'容忍内逾期'):'无产能',
+      '排产依据':`${t.proc}可选${eligible(t.proc,j,ST.machines).length}台(R1)；${t.lots.length>1?'大批量拆'+t.lots.length+'批并行；':''}${l.ch.why}；R2两班倒24h连续；R8容忍${tol}天`
+    })));
+  });
+  return R;
+}
+function machineRows(){
+  const R=[];
+  ST.machines.forEach(m=>{
+    const L=[];
+    ST.plan.tasks.forEach(t=>t.lots.forEach(l=>{if(l.mid===m.id)L.push({t,l})}));
+    L.sort((a,b)=>a.l.chS-b.l.chS);
+    L.forEach((x,i)=>R.push({
+      '工序段':x.t.proc,'机台编号':m.id,'机台名称':m.name,'机台类型':m.type,
+      '规格区间':m.proc==='拉丝'?m.lo+'-'+m.hi+'mm':'','速度系数':m.fac||'',
+      '本机序号':i+1,'订单号':x.t.no,'工单号':x.t.wo,'规格':x.t.job.spec,
+      '批次':(x.t.lots.indexOf(x.l)+1)+'/'+x.t.lots.length,'加工量':x.l.dur.ql,
+      '换型(h)':x.l.ch.h,'开工':fmtDT(x.l.chE),'完工':fmtDT(x.l.e),
+      '占机(h)':+((x.l.e-x.l.chS)/H).toFixed(2),'班次':shiftOf(x.l.chE),
+      '与上一单换型原因':x.l.ch.why}));
+  });
+  return R;
+}
+function exportPlan(){save('君威排产计划_'+fmtD(Date.now())+'.xlsx',
+  sheetBuf([['排产计划(订单视角)',planRows()],['按设备排程(机台视角)',machineRows()]]))}
+function exportWO(){
+  const R=[];
+  ST.plan.res.forEach(r=>{const j=r.job;
+    r.tasks.forEach((t,i)=>t.lots.forEach((l,li)=>R.push({'工单号':j.wo+'-'+(i+1)+(t.lots.length>1?'-'+(li+1):''),
+      '订单号':j.no,'工序':t.proc,'机台':l.mid,
+      '品名':j.pn,'规格':j.spec,'结构':j.sp.struct,'绳径mm':j.sp.D,'股径mm':j.sp.dStrand,'钢丝径mm':j.sp.dWire,
+      '计划数量':l.dur.ql,'计划开工':fmtDT(l.chE),'计划完工':fmtDT(l.e),'班次':shiftOf(l.chE),
+      '换型时长h':l.ch.h,'换型说明':l.ch.why,'交期':fmtD(j.due),'优先级':j.prio,'状态':'待生产'})));});
+  save('君威车间工单_'+fmtD(Date.now())+'.xlsx',sheetBuf([['工单',R]]));
+}
+function exportList(){
+  const R=ST.plan.res.map(r=>({'订单号':r.job.no,'品名':r.job.pn,'规格':r.job.spec,'数量m':r.job.qty,
+    '交期':fmtD(r.job.due),'客户类别':r.job.prio,'预计完工':r.ok?fmtD(r.fin):'',
+    '偏差天':r.ok?r.late:'','结论':r.ok?(r.late<=0?'按期':'逾期'):'无产能',
+    '拉丝机':r.tasks[0]?r.tasks[0].mid:'','捻股机':r.tasks[1]?r.tasks[1].mid:'','合绳机':r.tasks[2]?r.tasks[2].mid:''}));
+  const csv=XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(R));
+  save('君威计划清单_'+fmtD(Date.now())+'.csv','\ufeff'+csv);
+}
+function exportUtil(){
+  const R=Object.values(ST.ana.util).sort((a,b)=>b.pct-a.pct).map(u=>({
+    '工序':u.m.proc,'机台编号':u.m.id,'机台名称':u.m.name,'任务数':u.n,
+    '加工时长h':+(u.work/H).toFixed(1),'换型时长h':+(u.chg/H).toFixed(1),'停机时长h':+(u.down/H).toFixed(1),
+    '负荷率%':+u.pct.toFixed(1),'换型占比%':+u.chgPct.toFixed(1),
+    '分档':u.pct>=85?'高负荷':u.pct>=55?'均衡':u.pct>=20?'偏低':'闲置',
+    '规格区间':u.m.proc==='拉丝'?`${u.m.lo}-${u.m.hi}mm`:'','速度系数':u.m.fac||''}));
+  save('君威设备利用率_'+fmtD(Date.now())+'.xlsx',sheetBuf([['设备利用率',R]]));
+}
+function exportRisk(){
+  const R=ST.ana.risks.map(r=>({'级别':r.lv===1?'高危':'预警','类型':r.type,'对象':r.wo||r.mid||'','说明':r.msg}));
+  save('君威风险清单_'+fmtD(Date.now())+'.csv','\ufeff'+XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(R)));
+}
+function exportAll(){
+  const q=DATA.quality.map(x=>({...x,工序:procOfQuality(x)}));
+  save('君威排产方案包_'+fmtD(Date.now())+'.xlsx',sheetBuf([
+    ['排产计划',planRows()],
+    ['按设备排程',machineRows()],
+    ['计划清单',ST.plan.res.map(r=>({'订单号':r.job.no,'规格':r.job.spec,'数量m':r.job.qty,'交期':fmtD(r.job.due),
+      '预计完工':r.ok?fmtD(r.fin):'','偏差天':r.ok?r.late:'','客户类别':r.job.prio}))],
+    ['设备利用率',Object.values(ST.ana.util).map(u=>({'工序':u.m.proc,'机台':u.m.id,'负荷率%':+u.pct.toFixed(1),
+      '加工h':+(u.work/H).toFixed(1),'换型h':+(u.chg/H).toFixed(1),'任务数':u.n}))],
+    ['风险清单',ST.ana.risks.map(r=>({'级别':r.lv===1?'高危':'预警','类型':r.type,'说明':r.msg}))],
+    ['质量问题',q],
+    ['KPI',[{'准时交付率%':+ST.ana.kpi.onTime.toFixed(1),'延期订单':ST.ana.kpi.lateN,
+      '平均延误天':+ST.ana.kpi.avgLate.toFixed(2),'设备平均负荷%':+ST.ana.kpi.util.toFixed(1),
+      '换型总h':+ST.ana.kpi.chgH.toFixed(1),'计划跨度天':+ST.ana.kpi.makespan.toFixed(1)}]]
+  ]));
+}
+function exportGantt(view){
+  view=view||ST.gView;
+  const t0=ST.t0,t1=ST.ana.horizonEnd,days=Math.ceil((t1-t0)/D1)+1;
+  const px=2.4,LW=210,W=LW+days*24*px+24;
+  const rows=[];
+  if(view==='machine'){
+    PROCS.forEach(p=>{
+      const ms=ST.machines.filter(m=>m.proc===p).sort((a,b)=>a.id.localeCompare(b.id));
+      let first=true;
+      ms.forEach(m=>{
+        const ts=[];
+        ST.plan.tasks.forEach(t=>t.lots.forEach(l=>{if(l.mid===m.id)ts.push({proc:t.proc,no:t.no,chS:l.chS,chE:l.chE,e:l.e})}));
+        if(!ts.length)return;
+        const u=ST.ana.util[m.id];
+        rows.push({head:first?p+'工段':null,proc:p,
+          lab:m.id+'  '+m.name,sub:(u?u.pct.toFixed(0):'0')+'%',ts});
+        first=false;
+      });
+    });
+  }else{
+    [...ST.plan.res].sort((a,b)=>a.job.due-b.job.due).slice(0,160).forEach(r=>{
+      const ts=[];r.tasks.forEach(t=>t.lots.forEach(l=>ts.push({proc:t.proc,no:l.mid,chS:l.chS,chE:l.chE,e:l.e})));
+      rows.push({lab:r.job.no+'  '+r.job.spec.slice(0,18),sub:r.ok?(r.late>0?'+'+r.late.toFixed(1)+'d':'准时'):'—',ts,due:r.job.due});
+    });
+  }
+  const RH=17,TOP=56,Hh=TOP+rows.length*RH+34;
+  let s=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${Hh}" font-family="Helvetica,Arial,sans-serif" font-size="9">
+  <rect width="${W}" height="${Hh}" fill="#0E1419"/>
+  <text x="10" y="20" fill="#E6EDF3" font-size="14">君威钢绳索具 · 排产甘特图（${view==='machine'?'设备视角 · 按工段分组到具体机台':'订单视角 · 条内标注机台编号'}）</text>
+  <text x="10" y="36" fill="#8CA0B1">计划起点 ${fmtD(t0)}　跨度 ${days} 天　准时交付率 ${ST.ana.kpi.onTime.toFixed(1)}%　设备平均负荷 ${ST.ana.kpi.util.toFixed(1)}%　导出 ${fmtDT(Date.now())}</text>`;
+  for(let d=0;d<days;d++){
+    const x=LW+d*24*px;
+    s+=`<line x1="${x.toFixed(1)}" y1="${TOP-12}" x2="${x.toFixed(1)}" y2="${Hh-22}" stroke="#26333F"/>`;
+    if(d%2===0)s+=`<text x="${(x+2).toFixed(1)}" y="${TOP-3}" fill="#5E7384">${fmtD(t0+d*D1).slice(5)}</text>`;
+  }
+  rows.forEach((r,i)=>{
+    const y=TOP+i*RH;
+    if(r.head)s+=`<rect x="0" y="${y-1}" width="${W}" height="${RH}" fill="#182633"/><text x="6" y="${y+11}" fill="${PCOL[r.proc]}" font-size="10">▌${esc(r.head)}</text>`;
+    else{
+      if(i%2)s+=`<rect x="0" y="${y-1}" width="${W}" height="${RH}" fill="#121A22"/>`;
+      s+=`<text x="8" y="${y+11}" fill="#C6D3DE">${esc(r.lab).slice(0,26)}</text>`;
+      s+=`<text x="${LW-30}" y="${y+11}" fill="#5E7384">${esc(r.sub||'')}</text>`;
+    }
+    if(r.due!=null)s+=`<line x1="${(LW+(r.due-t0)/H*px).toFixed(1)}" y1="${y}" x2="${(LW+(r.due-t0)/H*px).toFixed(1)}" y2="${y+RH-2}" stroke="#E4574C" stroke-dasharray="2,2"/>`;
+    (r.ts||[]).forEach(t=>{
+      const x=LW+(t.chE-t0)/H*px,w=Math.max((t.e-t.chE)/H*px,1.4);
+      const cx=LW+(t.chS-t0)/H*px,cw=(t.chE-t.chS)/H*px;
+      if(cw>0.4)s+=`<rect x="${cx.toFixed(1)}" y="${y+3}" width="${cw.toFixed(1)}" height="10" fill="#4A5766"/>`;
+      s+=`<rect x="${x.toFixed(1)}" y="${y+3}" width="${w.toFixed(1)}" height="10" fill="${PCOL[t.proc]}" rx="1"/>`;
+      if(w>34)s+=`<text x="${(x+2).toFixed(1)}" y="${y+11}" fill="#06171D" font-size="7">${esc(String(t.no)).slice(0,10)}</text>`;
+    });
+  });
+  s+=`<text x="10" y="${Hh-8}" fill="#5E7384">■ 蓝=拉丝　■ 黄=捻股　■ 绿=合绳　■ 灰=换型（R3–R5）　红虚线=交期　行首为机台编号与名称，右侧为该机台负荷率</text></svg>`;
+  save('君威甘特图_'+(view==='machine'?'设备视角':'订单视角')+'_'+fmtD(Date.now())+'.svg',s);
+}
+function tpl(nm,rows){save(nm+'.xlsx',sheetBuf([[nm,rows]]))}
+/* ======================= 规则说明 ======================= */
+function renderRule(){
+  const R=[['R1','排产单位','按设备型号排产；订单先匹配可加工它的设备型号，同型号内按紧急程度、先后顺序排产','设备—产品适配关系直接取自两张矩阵表：捻股/合绳表中某规格在某机台列下无数据即判定"不适配"，该机台不进入候选；拉丝按设备的丝径区间判定。候选确定后择"最早完工 + λ×换型代价"最优者'],
+  ['R2','班次日历','两班倒、每班12小时、全天24小时连续生产','时间轴按 24h 连续推进，不切分班次；工单上标注开工所属白班/夜班'],
+  ['R3','换型判定（拉丝）','成品和原料有一个不同就要换型','换型键 = 表面处理(原料) + 成品丝径；任一不同即触发'],
+  ['R4','换型判定（捻股、合绳）','结构和（绳）股径有一个不同就要换型','换型键 = 股结构 + 股径/绳径；任一不同即触发'],
+  ['R5','换型耗时','1–5 小时不等，随规格切换幅度变化','h = clamp(1 + 相对径差×6 + 结构/表面切换惩罚, 1, 5)，结果写入甘特图灰色斜纹段与工单'],
+  ['R6','工序间隔','相邻工序允许间隔等待，须控制在 3 天以内','排完后做上游右移：在不与其他任务冲突的前提下把上道工序尽量后推，压缩半成品等待；仍超限则列为风险'],
+  ['R7','订单字段','订单号、规格、数量、交期','导入时模糊匹配列名，缺失交期按订单日期 +10 天兜底'],
+  ['R8','交期约束','部分客户延期罚款（硬约束），部分可容忍 ≤3 天（软约束）','客户类别"罚款"容忍 0 天、"普通/重点"容忍 3 天；超容忍列高危风险，容忍内列预警'],
+  ['R9','优先级规则','重点客户、重点订单优先生产','排序键 = 交期 − 优先级提前量（插单 −∞、重点 −3天、罚款 −2天）'],
+  ['R10','插单频率','紧急插单约每周 5 次','插单面板一键注入新订单并全局重排，重排结果与基准方案逐单对比量化']];
+  let h=`<div class="panel"><h3>业务规则与约束字典 → 算法映射 <span class="sub">评审"约束可解释"对照表</span></h3>
+   <div class="tw"><table><thead><tr><th>#</th><th>规则</th><th>企业口径</th><th>本系统的建模与实现</th></tr></thead><tbody>`;
+  R.forEach(r=>h+=`<tr><td class="mono" style="color:var(--p1)">${r[0]}</td><td>${esc(r[1])}</td>
+    <td style="white-space:normal;max-width:300px;color:var(--mut)">${esc(r[2])}</td>
+    <td style="white-space:normal;max-width:460px">${esc(r[3])}</td></tr>`);
+  h+=`</tbody></table></div></div>`;
+  h+=`<div class="grid g2">
+  <div class="panel"><h3>排产算法</h3><div class="pad hint" style="line-height:1.8">
+   <b style="color:var(--ink)">1. 订单展开</b>：每张订单按规格解析出绳径/结构/股数/绳芯，推导股径与钢丝径，拆成 拉丝 → 捻股 → 合绳 三道工序任务。<br>
+   <b style="color:var(--ink)">2. 优先级排序</b>：以 EDD（最早交期优先）为主轴，叠加 R9 优先级提前量与 R10 插单置顶。<br>
+   <b style="color:var(--ink)">3. 逐工序择机</b>：对每个候选机台计算「换型时长 + 加工时长」，在该机台空闲区间内找最早可容纳窗口，取 <span class="mono">完工时刻 + λ×换型时长</span> 最小者（λ=${ST.cfg.wChange}，用于在交期与效率之间平衡）。<br>
+   <b style="color:var(--ink)">4. 链式推进</b>：下道工序最早开工 = 上道完工；物料延迟、设备停机以时间窗形式占用机台或抬高就绪时间。<br>
+   <b style="color:var(--ink)">5. R6 右移修正</b>：对间隔超 3 天的工序对，把上游任务在不冲突范围内尽量右移，减少半成品积压。<br>
+   <b style="color:var(--ink)">6. 人工干预</b>：三种方式——① 依据面板锁定/改派/改客户等级；② 甘特图上直接拖拽色块（左右改开工时刻，上下换机台，15 分钟粒度）；③ 插单时在三套处理方案中拍板。被人工确定的安排在重算时作为固定占位先行落位，算法只在剩余空间求解。<br>
+   <b style="color:var(--ink)">7. 少扰动重排</b>：重排时读取上一版的机台分配，对"仍排在原机台"的方案给予成本减免（${ST.cfg.sticky}h 当量），因此扰动后 95%+ 的订单交期与机台保持不变，而不是推倒重来。<br>
+   <b style="color:var(--ink)">目标函数</b>：准时交付率为首要目标，设备利用率为次要目标（通过换型压缩与最早完工择机间接优化）。
+  </div></div>
+  <div class="panel"><h3>数据口径与已知近似</h3><div class="pad hint" style="line-height:1.8">
+   · <b style="color:var(--ink)">拉丝产能</b>：《产品额定》拉丝表给出样本期产量，按全厂月产 2,900 吨口径归一化为各机台日产能（kg/天）。<br>
+   · <b style="color:var(--ink)">捻股/合绳速度</b>：原表每个规格行对 50/12 台机台给出速度，经校验各机台恒为基准速度的固定倍率，故压缩为「规格基准速度 × 机台系数」，与原表数值完全等价。<br>
+   · <b style="color:var(--ink)">股径推导</b>：d ≈ D·sin(π/n)/(1+sin(π/n))，n 为外层股数；6 股绳得 D/3，与工程经验一致。<br>
+   · <b style="color:var(--ink)">钢丝径推导</b>：按股内丝数折算层数（7丝/3、19丝/5、26–36丝/7）。<br>
+   · <b style="color:var(--ink)">客户类别</b>：原始订单表未含客户分级字段，系统按"大批量/工程机械等关键品名"预置为重点、其余为普通，可在计划表逐单改判或由导入列覆盖。<br>
+   · <b style="color:var(--ink)">设备—规格适配矩阵</b>：本数据包两张矩阵表无空缺，因此捻股 50 台、合绳 12 台对样例规格全部适配；导入新数据若出现空缺，系统会自动按"不适配"剔除该机台（R1）。<br>
+   · <b style="color:var(--ink)">绳芯</b>：合绳工艺表为"绳子+绳芯"口径，绳芯工时已包含在合绳速度中。<br>
+   以上近似均在排产依据中逐条显示，评审与计划员可核对并用真实工艺参数替换。
+  </div></div></div>`;
+  $('#v-rule').innerHTML=h;
+}
+/* ======================= 初始化 ======================= */
+const VIEWS={'v-dash':renderDash,'v-plan':renderPlan,'v-gantt':renderGantt,
+  'v-dis':renderDis,'v-sc':renderSc,'v-ana':renderAna,'v-data':renderData,'v-rule':renderRule};
+let dirty={};
+function cur(){const b=$('#tabs button.on');return (b&&b.dataset&&VIEWS[b.dataset.v])?b.dataset.v:'v-dash'}
+function ensure(id){const f=VIEWS[id];if(f&&dirty[id]!==false){f();dirty[id]=false}}
+function renderAll(){
+  $('#pHorizon').innerHTML='计划起点 <b>'+fmtD(ST.t0)+'</b>';
+  $('#pScale').innerHTML='订单 <b>'+ST.orders.length+'</b> · 工序 <b>'+ST.plan.tasks.length+'</b>';
+  Object.keys(VIEWS).forEach(k=>dirty[k]=true);
+  ensure(cur());
+}
+$('#tabs').onclick=e=>{
+  const b=e.target.closest('button');if(!b)return;
+  $$('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  $$('.view').forEach(v=>v.classList.toggle('on',v.id===b.dataset.v));
+  ensure(b.dataset.v);
+  window.scrollTo(0,0);const m=document.querySelector('main');if(m)m.scrollTop=0;
+};
+$('#bRun').onclick=()=>run(true);
+$('#bUndo').onclick=()=>{
+  const h=ST.hist.pop();if(!h)return;
+  ST.orders=h.orders;ST.downs=h.downs;ST.locks=h.locks;ST.cfg=h.cfg;
+  run(false);toast('已撤销到上一版方案');
+};
+$('#dwClose').onclick=closeDrawer;$('#scrim').onclick=closeDrawer;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
+ST.orders=seedOrders();
+run(false);
+/* ======================= 试算（不改动当前状态） ======================= */
+function curAssign(){
+  const m={};if(ST.plan)ST.plan.tasks.forEach(t=>m[t.key]=t.lots.map(l=>l.mid));return m;
+}
+function trial(over){
+  const st={
+    orders:over.orders||ST.orders,machines:ST.machines,
+    downs:over.downs||ST.downs,locks:over.locks||ST.locks,mats:over.mats||ST.mats,
+    cfg:ST.cfg,prevAssign:curAssign()
+  };
+  st.t0=Math.min(...st.orders.map(o=>new Date(o.od+'T00:00:00').getTime()));
+  const p=schedule(st);
+  return {plan:p,ana:analyze(p,st),st};
+}
+function diffVs(basePlan,newPlan){
+  const b={};basePlan.res.forEach(r=>b[r.job.wo]={late:r.late,mids:r.tasks.map(t=>t.mid).join('|')});
+  let moved=0,worse=0,sumWorse=0,maxWorse=0,remach=0,newN=0;
+  newPlan.res.forEach(r=>{
+    const o=b[r.job.wo];
+    if(!o){newN++;return}
+    if(!r.ok||o.late==null)return;
+    const d=r.late-o.late;
+    if(Math.abs(d)>0.05){moved++;if(d>0){worse++;sumWorse+=d;maxWorse=Math.max(maxWorse,d)}}
+    if(r.tasks.map(t=>t.mid).join('|')!==o.mids)remach++;
+  });
+  return {moved,worse,sumWorse:+sumWorse.toFixed(1),maxWorse:+maxWorse.toFixed(1),remach,newN,
+    total:newPlan.res.length,stable:+((1-moved/Math.max(newPlan.res.length,1))*100).toFixed(1)};
+}
+/* ======================= 插单处理选项 ======================= */
+let OPTS=null;
+function buildInsertOptions(nd){
+  busy(true,'正在试算三种处理方案…');
+  setTimeout(()=>{
+    try{
+      const A=ST.orders.concat([Object.assign({},nd,{rush:true})]);
+      const B=ST.orders.concat([Object.assign({},nd,{rush:false})]);
+      const later=fmtD(new Date(nd.due).getTime()+7*D1);
+      const C=ST.orders.concat([Object.assign({},nd,{rush:false,due:later})]);
+      const rA=trial({orders:A}),rB=trial({orders:B}),rC=trial({orders:C});
+      const base=ST.plan;
+      OPTS=[
+        {k:'A',name:'接受插单 · 置于最高优先',orders:A,r:rA,
+         note:'插单排序置顶（R10），优先占用最早可用机台；对既有订单扰动最大。'},
+        {k:'B',name:'接受插单 · 按交期正常排队',orders:B,r:rB,
+         note:'插单不特权，仅按 EDD 与客户等级参与排序；扰动小，但插单本身可能逾期。'},
+        {k:'C',name:'接受插单 · 与客户协商交期顺延 7 天',orders:C,r:rC,
+         note:'交期放宽到 '+later+'，用交期换产能，既有订单几乎不受影响。'}
+      ].map(o=>Object.assign(o,{d:diffVs(base,o.r.plan),
+        self:o.r.plan.res.find(x=>x.job.wo===nd.wo)}));
+      renderOptions(nd);
+    }catch(e){console.error(e);toast('试算失败：'+e.message)}
+    busy(false);
+  },30);
+}
+function renderOptions(nd){
+  const p=$('#optPanel'),b=$('#optBody');if(!p)return;
+  p.style.display='';
+  let h=`<div class="hint" style="margin-bottom:10px">插单 <b style="color:var(--ink)">${esc(nd.no)}</b> ${esc(nd.spec)} · ${nd.qty.toLocaleString()} m · 交期 ${esc(nd.due)} · 客户 ${esc(nd.prio)}。以下为三种处理方式的量化对比，由计划员拍板。</div>
+  <div class="tw"><table><thead><tr><th>方案</th><th>插单结果</th><th class="num">全厂准时率</th><th class="num">延期订单</th>
+  <th class="num">被改变交期</th><th class="num">新增延误(天)</th><th class="num">最大单张(天)</th><th class="num">方案稳定度</th><th class="num">设备负荷</th><th></th></tr></thead><tbody>`;
+  OPTS.forEach(o=>{
+    const k=o.r.ana.kpi,s=o.self;
+    const selfTxt=s&&s.ok?(s.late<=0?`<span class="tag t-ok">准时 富余${(-s.late).toFixed(1)}天</span>`
+      :s.late>tolOf(nd.prio)?`<span class="tag t-risk">逾期${s.late.toFixed(1)}天</span>`
+      :`<span class="tag t-warn">逾期${s.late.toFixed(1)}天·容忍内</span>`):'<span class="tag t-risk">未排入</span>';
+    h+=`<tr><td><b>${o.k}</b> ${esc(o.name)}<br><span style="color:var(--dim);white-space:normal">${esc(o.note)}</span></td>
+    <td>${selfTxt}</td><td class="num">${k.onTime.toFixed(1)}%</td><td class="num">${k.lateN}</td>
+    <td class="num">${o.d.moved}</td><td class="num" style="color:${o.d.sumWorse>0?'var(--risk)':'var(--ok)'}">${o.d.sumWorse}</td>
+    <td class="num">${o.d.maxWorse}</td><td class="num">${o.d.stable}%</td><td class="num">${k.util.toFixed(1)}%</td>
+    <td><button class="btn sm pri optApply" data-k="${o.k}">采用</button></td></tr>`;
+  });
+  h+=`</tbody></table></div>
+  <div class="hint" style="margin-top:9px">方案稳定度＝交期未被改变的订单占比，对应赛题"尽量少扰动未受影响的订单"；采用后仍可在甘特图上拖拽微调。</div>`;
+  b.innerHTML=h;
+  $$('.optApply').forEach(x=>x.onclick=()=>{
+    const o=OPTS.find(z=>z.k===x.dataset.k);if(!o)return;
+    ST.orders=o.orders;run(true);
+    toast('已采用方案 '+o.k+'：'+o.name);
+    p.style.display='none';
+  });
+  p.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+/* ======================= 方案库 ======================= */
+function snapState(){return JSON.parse(JSON.stringify({orders:ST.orders,downs:ST.downs,locks:ST.locks,mats:ST.mats,cfg:ST.cfg}))}
+function saveScenario(name){
+  const k=ST.ana.kpi;
+  const sc={id:'S'+Date.now(),name:name||('方案 '+(ST.scenarios.length+1)),time:Date.now(),
+    kpi:{onTime:+k.onTime.toFixed(1),lateN:k.lateN,avgLate:+k.avgLate.toFixed(2),util:+k.util.toFixed(1),
+         chgH:+k.chgH.toFixed(0),makespan:+k.makespan.toFixed(1),risk1:k.risk1,risk2:k.risk2,total:k.total},
+    meta:{orders:ST.orders.length,locks:ST.locks.length,downs:ST.downs.length,mats:ST.mats.length},
+    state:snapState(),
+    res:ST.plan.res.map(r=>({wo:r.job.wo,no:r.job.no,due:r.job.due,late:r.late,fin:r.fin,
+      mids:r.tasks.map(t=>t.mid)}))};
+  ST.scenarios.push(sc);persistSc();return sc;
+}
+function persistSc(){try{localStorage.setItem('jw_public_demo_v1',JSON.stringify(ST.scenarios))}catch(e){}}
+function loadSc(){try{const x=localStorage.getItem('jw_public_demo_v1');if(x)ST.scenarios=JSON.parse(x)||[]}catch(e){ST.scenarios=[]}}
+function applyScenario(id){
+  const s=ST.scenarios.find(x=>x.id===id);if(!s)return;
+  ST.orders=JSON.parse(JSON.stringify(s.state.orders));
+  ST.downs=JSON.parse(JSON.stringify(s.state.downs));
+  ST.locks=JSON.parse(JSON.stringify(s.state.locks));
+  ST.mats=JSON.parse(JSON.stringify(s.state.mats));
+  ST.cfg=Object.assign({},ST.cfg,s.state.cfg);
+  run(true);toast('已载入 '+s.name);
+}
+let scSel=[];
+function renderSc(){
+  let h=`<div class="panel"><h3>方案库 <span class="sub">多套排产方案并存，可随时载入、对比、导出；保存在本机浏览器</span><span class="sp"></span>
+    <button class="btn sm pri" id="scSave">把当前方案存入方案库</button>
+    <button class="btn sm" id="scClear">清空方案库</button></h3><div class="pad">`;
+  if(!ST.scenarios.length){
+    h+=`<div class="empty">方案库是空的。先在「插单与异常重排」里制造一个场景，或直接点右上角保存当前方案，再存第二个方案即可逐单对比。</div>`;
+  }else{
+    h+=`<div class="tw"><table><thead><tr><th>对比</th><th>方案名</th><th>保存时间</th><th class="num">准时率</th>
+     <th class="num">延期</th><th class="num">平均延误</th><th class="num">设备负荷</th><th class="num">换型h</th>
+     <th class="num">跨度天</th><th class="num">高危</th><th>构成</th><th></th></tr></thead><tbody>`;
+    ST.scenarios.forEach(s=>{
+      h+=`<tr><td><input type="checkbox" class="scCk" data-id="${s.id}" ${scSel.indexOf(s.id)>=0?'checked':''} style="width:auto"></td>
+      <td><input type="text" class="scNm" data-id="${s.id}" value="${esc(s.name)}" style="width:150px"></td>
+      <td style="color:var(--mut)">${fmtDT(s.time)}</td>
+      <td class="num">${s.kpi.onTime}%</td><td class="num">${s.kpi.lateN}</td><td class="num">${s.kpi.avgLate}</td>
+      <td class="num">${s.kpi.util}%</td><td class="num">${s.kpi.chgH}</td><td class="num">${s.kpi.makespan}</td>
+      <td class="num" style="color:${s.kpi.risk1?'var(--risk)':'var(--ok)'}">${s.kpi.risk1}</td>
+      <td style="color:var(--dim)">订单${s.meta.orders} 锁定${s.meta.locks} 停机${s.meta.downs} 缺料${s.meta.mats}</td>
+      <td><button class="btn sm scLoad" data-id="${s.id}">载入</button>
+          <button class="btn sm scDel" data-id="${s.id}">删除</button></td></tr>`;
+    });
+    h+=`</tbody></table></div><div class="hint">勾选 2–3 个方案即可在下方看到 KPI 与逐单交期差异；「载入」会把该方案的订单、锁定、停机、缺料全部恢复并重算。</div>`;
+  }
+  h+=`</div></div><div id="scCmp"></div>`;
+  $('#v-sc').innerHTML=h;
+  $('#scSave').onclick=()=>{saveScenario();renderSc();toast('已存入方案库')};
+  $('#scClear').onclick=()=>{ST.scenarios=[];scSel=[];persistSc();renderSc();toast('方案库已清空')};
+  $$('.scCk').forEach(c=>c.onchange=()=>{
+    const id=c.dataset.id;
+    if(c.checked){if(scSel.indexOf(id)<0)scSel.push(id);if(scSel.length>3)scSel.shift()}
+    else scSel=scSel.filter(x=>x!==id);
+    renderSc();
+  });
+  $$('.scNm').forEach(i=>i.onchange=()=>{
+    const s=ST.scenarios.find(x=>x.id===i.dataset.id);if(s){s.name=i.value;persistSc()}});
+  $$('.scLoad').forEach(b=>b.onclick=()=>applyScenario(b.dataset.id));
+  $$('.scDel').forEach(b=>b.onclick=()=>{
+    ST.scenarios=ST.scenarios.filter(x=>x.id!==b.dataset.id);
+    scSel=scSel.filter(x=>x!==b.dataset.id);persistSc();renderSc()});
+  renderScCmp();
+}
+function renderScCmp(){
+  const e=$('#scCmp');if(!e)return;
+  const L=scSel.map(id=>ST.scenarios.find(s=>s.id===id)).filter(Boolean);
+  if(L.length<2){e.innerHTML='';return}
+  const rows=[['准时交付率 %','onTime',1],['延期订单数','lateN',0],['平均延误 天','avgLate',0],
+    ['设备平均负荷 %','util',1],['换型总耗时 h','chgH',0],['计划跨度 天','makespan',0],['高危风险项','risk1',0]];
+  let h=`<div class="panel"><h3>方案对比 <span class="sub">${L.map(s=>esc(s.name)).join(' ／ ')}</span>
+    <span class="sp"></span><button class="btn sm" id="scExp">导出对比表</button></h3><div class="pad">
+    <div class="tw"><table><thead><tr><th>指标</th>${L.map(s=>`<th class="num">${esc(s.name)}</th>`).join('')}<th>最优</th></tr></thead><tbody>`;
+  rows.forEach(r=>{
+    const vals=L.map(s=>{const v=s.kpi[r[1]];return (typeof v==='number'&&isFinite(v))?v:null});
+    let bi=-1;vals.forEach((v,i)=>{if(v==null)return;if(bi<0||(r[2]?v>vals[bi]:v<vals[bi]))bi=i});
+    h+=`<tr><td>${r[0]}</td>${vals.map((v,i)=>`<td class="num"${i===bi?' style="color:var(--ok);font-weight:600"':''}>${v==null?'—':v}</td>`).join('')}
+      <td style="color:var(--mut)">${bi>=0?esc(L[bi].name):'—'}</td></tr>`;
+  });
+  h+=`</tbody></table></div>`;
+  // 逐单差异
+  const base=L[0],map={};base.res.forEach(r=>map[r.wo]=r);
+  const diff=[];
+  const others=L.slice(1);
+  const wos=new Set();L.forEach(s=>s.res.forEach(r=>wos.add(r.wo)));
+  wos.forEach(wo=>{
+    const cells=L.map(s=>s.res.find(r=>r.wo===wo));
+    if(cells.some(c=>!c))return diff.push({wo,cells,onlyIn:true});
+    const lates=cells.map(c=>c.late);
+    if(Math.max.apply(null,lates)-Math.min.apply(null,lates)>0.05)diff.push({wo,cells});
+  });
+  h+=`<div class="hint" style="margin:12px 0 7px"><b style="color:var(--ink)">逐单交期差异</b>：共 ${diff.length} 张订单在这些方案之间结果不同（含仅出现在某一方案中的插单）。</div>`;
+  if(diff.length){
+    h+=`<div class="tw" style="max-height:340px;overflow:auto"><table><thead><tr><th>订单号</th><th>交期</th>
+      ${L.map(s=>`<th class="num">${esc(s.name)} 偏差/机台</th>`).join('')}</tr></thead><tbody>`;
+    diff.slice(0,80).forEach(d=>{
+      const any=d.cells.find(Boolean);
+      h+=`<tr><td class="mono">${esc(any.no)}</td><td>${any.due?fmtD(any.due):''}</td>`;
+      d.cells.forEach(c=>{
+        h+=c?`<td class="num" style="color:${c.late>0?'var(--risk)':'var(--ok)'}">${c.late>0?'+':''}${c.late}天<br>
+          <span class="mono" style="color:var(--dim);font-size:10.5px">${esc((c.mids||[]).join(' → '))}</span></td>`
+          :`<td class="num" style="color:var(--dim)">未包含</td>`;
+      });
+      h+=`</tr>`;
+    });
+    h+=`</tbody></table></div>`;
+  }
+  h+=`</div></div>`;
+  e.innerHTML=h;
+  $('#scExp').onclick=()=>{
+    const sheets=[['KPI对比',rows.map(r=>{
+      const o={'指标':r[0]};L.forEach(s=>o[s.name]=s.kpi[r[1]]);return o})]];
+    sheets.push(['逐单差异',diff.map(d=>{
+      const any=d.cells.find(Boolean);const o={'订单号':any.no,'交期':any.due?fmtD(any.due):''};
+      L.forEach((s,i)=>{const c=d.cells[i];o[s.name+'·偏差天']=c?c.late:'未包含';o[s.name+'·机台']=c?(c.mids||[]).join(' → '):''});
+      return o})]);
+    save('君威方案对比_'+fmtD(Date.now())+'.xlsx',sheetBuf(sheets));
+  };
+}
+/* ======================= 启动补丁 ======================= */
+loadSc();
+$('#bSave').onclick=()=>{saveScenario();dirty['v-sc']=true;toast('已存入方案库，可在「方案对比」页查看');};
+
+</script>
+</body>
+</html>

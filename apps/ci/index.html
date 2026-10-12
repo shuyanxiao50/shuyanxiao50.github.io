@@ -1,0 +1,1483 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Composition Intelligence</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100%;
+    background: #0a0c0d;
+    color: #e8ece9;
+    font-family:
+        Inter,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+}
+
+body {
+    min-height: 100vh;
+}
+
+.app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ========================================================= */
+
+.header {
+    height: 74px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 34px;
+
+    border-bottom: 1px solid #202526;
+
+    background: #0b0d0e;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+}
+
+.brand-mark {
+    width: 31px;
+    height: 31px;
+
+    border: 1px solid #80d86c;
+
+    display: grid;
+    place-items: center;
+
+    color: #80d86c;
+    font-size: 12px;
+
+    border-radius: 6px;
+}
+
+.brand-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+}
+
+.brand-sub {
+    margin-top: 3px;
+
+    color: #68716d;
+
+    font-size: 9px;
+    letter-spacing: 1.8px;
+}
+
+.header-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    color: #68716d;
+
+    font-size: 10px;
+    letter-spacing: 1.3px;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+
+    background: #83d66d;
+
+    border-radius: 50%;
+
+    box-shadow:
+        0 0 12px rgba(131,214,109,.7);
+}
+
+/* ========================================================= */
+
+.main {
+    flex: 1;
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        430px;
+
+    min-height: calc(100vh - 74px);
+}
+
+/* ========================================================= */
+
+.viewer {
+    position: relative;
+
+    min-height: 700px;
+
+    background: #080a0b;
+
+    overflow: hidden;
+}
+
+.image-area {
+    position: absolute;
+
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 30px;
+}
+
+.image-area img {
+    max-width: 100%;
+    max-height: 100%;
+
+    object-fit: contain;
+
+    display: none;
+
+    border-radius: 2px;
+
+    box-shadow:
+        0 20px 70px rgba(0,0,0,.45);
+}
+
+.empty-state {
+    text-align: center;
+
+    width: min(520px, 80%);
+
+    border: 1px dashed #303735;
+
+    padding: 55px 30px;
+
+    border-radius: 10px;
+
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(126,215,106,.035),
+            transparent 65%
+        );
+}
+
+.empty-icon {
+    width: 62px;
+    height: 62px;
+
+    margin: 0 auto 20px;
+
+    border: 1px solid #3d4843;
+
+    border-radius: 12px;
+
+    display: grid;
+    place-items: center;
+
+    color: #80d86c;
+
+    font-size: 23px;
+}
+
+.empty-title {
+    font-size: 18px;
+    font-weight: 600;
+
+    margin-bottom: 8px;
+}
+
+.empty-sub {
+    color: #69726e;
+
+    font-size: 12px;
+
+    line-height: 1.7;
+
+    margin-bottom: 26px;
+}
+
+.upload-button {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    height: 42px;
+
+    padding: 0 24px;
+
+    background: #80d86c;
+    color: #0b100c;
+
+    border: none;
+
+    border-radius: 5px;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    letter-spacing: .6px;
+
+    cursor: pointer;
+
+    transition: .2s;
+}
+
+.upload-button:hover {
+    background: #9ae58a;
+
+    transform: translateY(-1px);
+}
+
+input[type=file] {
+    display: none;
+}
+
+/* ========================================================= */
+
+.viewer-top {
+    position: absolute;
+
+    top: 25px;
+    left: 30px;
+
+    z-index: 5;
+
+    display: none;
+}
+
+.viewer-label {
+    font-size: 10px;
+
+    color: rgba(255,255,255,.72);
+
+    letter-spacing: 1.4px;
+
+    background: rgba(5,7,8,.68);
+
+    padding: 7px 10px;
+
+    border-left: 2px solid #80d86c;
+
+    backdrop-filter: blur(10px);
+}
+
+/* ========================================================= */
+
+.processing {
+    position: absolute;
+
+    inset: 0;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    background:
+        rgba(5,7,8,.78);
+
+    z-index: 20;
+
+    backdrop-filter: blur(7px);
+}
+
+.processing-box {
+    width: 320px;
+
+    text-align: center;
+}
+
+.processing-title {
+    font-size: 14px;
+
+    letter-spacing: 1.2px;
+
+    margin-bottom: 18px;
+}
+
+.progress {
+    width: 100%;
+    height: 3px;
+
+    background: #27302c;
+
+    overflow: hidden;
+
+    border-radius: 3px;
+}
+
+.progress-bar {
+    width: 20%;
+    height: 100%;
+
+    background: #80d86c;
+
+    animation: progress 1.4s infinite;
+}
+
+@keyframes progress {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(550%);
+    }
+}
+
+.processing-sub {
+    margin-top: 12px;
+
+    color: #69736e;
+
+    font-size: 10px;
+
+    letter-spacing: .7px;
+}
+
+/* ========================================================= */
+
+.sidebar {
+    background: #101313;
+
+    border-left: 1px solid #252a29;
+
+    padding: 30px 28px;
+
+    overflow-y: auto;
+}
+
+.sidebar-title {
+    font-size: 22px;
+
+    line-height: 1.05;
+
+    letter-spacing: -.4px;
+
+    font-weight: 750;
+}
+
+.sidebar-sub {
+    margin-top: 7px;
+
+    color: #66706c;
+
+    font-size: 9px;
+
+    letter-spacing: 1.6px;
+}
+
+.rule {
+    height: 1px;
+
+    background: #252a29;
+
+    margin: 22px 0;
+}
+
+/* ========================================================= */
+
+.score-label {
+    color: #69736f;
+
+    font-size: 10px;
+
+    letter-spacing: 1px;
+}
+
+.score-row {
+    display: flex;
+    align-items: baseline;
+
+    gap: 11px;
+
+    margin-top: 4px;
+}
+
+.score {
+    color: #84dc6d;
+
+    font-size: 58px;
+
+    font-weight: 700;
+
+    line-height: 1;
+}
+
+.score-max {
+    color: #69736f;
+
+    font-size: 15px;
+}
+
+.status {
+    margin-top: 6px;
+
+    color: #84dc6d;
+
+    font-size: 9px;
+
+    letter-spacing: .6px;
+
+    font-weight: 700;
+}
+
+/* ========================================================= */
+
+.metric {
+    margin-top: 17px;
+}
+
+.metric-head {
+    display: flex;
+
+    justify-content: space-between;
+
+    color: #a0a8a4;
+
+    font-size: 9px;
+
+    letter-spacing: .5px;
+}
+
+.metric-value {
+    color: #d5dad7;
+
+    font-size: 10px;
+}
+
+.metric-track {
+    height: 5px;
+
+    margin-top: 7px;
+
+    background: #282d2c;
+
+    overflow: hidden;
+
+    border-radius: 2px;
+}
+
+.metric-fill {
+    height: 100%;
+
+    background: #80d86c;
+
+    width: 0%;
+
+    transition: width .8s ease;
+}
+
+.metric-fill.blue {
+    background: #55bfd2;
+}
+
+.metric-fill.yellow {
+    background: #d8c84f;
+}
+
+/* ========================================================= */
+
+.card {
+    margin-top: 24px;
+
+    padding: 17px;
+
+    border: 1px solid #303534;
+
+    background: #141817;
+
+    border-radius: 5px;
+}
+
+.card-title {
+    color: #7a8580;
+
+    font-size: 9px;
+
+    letter-spacing: 1px;
+
+    margin-bottom: 14px;
+}
+
+.insight {
+    display: flex;
+
+    gap: 9px;
+
+    margin: 10px 0;
+
+    color: #c3cac6;
+
+    font-size: 10px;
+
+    line-height: 1.55;
+}
+
+.insight::before {
+    content: "•";
+
+    color: #80d86c;
+
+    font-size: 14px;
+
+    line-height: 12px;
+}
+
+.recommendation {
+    display: flex;
+
+    gap: 9px;
+
+    margin: 10px 0;
+
+    color: #c3cac6;
+
+    font-size: 10px;
+
+    line-height: 1.55;
+}
+
+.recommendation::before {
+    content: "→";
+
+    color: #d7c74e;
+
+    font-size: 11px;
+}
+
+/* ========================================================= */
+
+.telemetry {
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 13px 20px;
+}
+
+.telemetry-item {
+    border-bottom: 1px solid #222726;
+
+    padding-bottom: 8px;
+}
+
+.telemetry-label {
+    color: #66706c;
+
+    font-size: 8px;
+
+    letter-spacing: .8px;
+
+    margin-bottom: 4px;
+}
+
+.telemetry-value {
+    color: #cbd1ce;
+
+    font-size: 10px;
+}
+
+/* ========================================================= */
+
+.footer {
+    margin-top: 25px;
+
+    color: #49524f;
+
+    font-size: 8px;
+
+    letter-spacing: .7px;
+
+    display: flex;
+
+    justify-content: space-between;
+}
+
+/* ========================================================= */
+
+@media (max-width: 1050px) {
+
+    .main {
+        grid-template-columns: 1fr;
+    }
+
+    .viewer {
+        min-height: 65vh;
+    }
+
+    .sidebar {
+        border-left: none;
+        border-top: 1px solid #252a29;
+    }
+}
+
+
+.demo-tools {display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:14px 24px;border-bottom:1px solid #202526;color:#96aaa3;font-size:13px}
+.demo-tools a {color:#92c6af}
+.demo-tools .tool-button {display:inline-flex;align-items:center;min-height:40px;padding:8px 14px;background:#15221e;border:1px solid #335247;border-radius:5px;color:#d6e9df;cursor:pointer;font:inherit;text-decoration:none}
+.demo-tools .tool-button[hidden] {display:none}
+.demo-tools button:disabled {opacity:.5;cursor:wait}
+.demo-tools label:focus-within,.demo-tools button:focus-visible {outline:2px solid #92c6af;outline-offset:3px}
+.demo-tools #runtimeMessage {flex-basis:100%;line-height:1.5}
+@media (max-width:600px) {.header{height:auto;min-height:74px;padding:18px;gap:12px;flex-wrap:wrap}.brand-title{font-size:14px}.demo-tools{padding:12px 18px}}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <header class="header">
+
+        <div class="brand">
+
+            <div class="brand-mark">
+                CI
+            </div>
+
+            <div>
+
+                <div class="brand-title">
+                    COMPOSITION INTELLIGENCE
+                </div>
+
+                <div class="brand-sub">
+                    COMPUTER VISION / PHOTOGRAPHY ANALYSIS
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="header-status">
+
+            <span class="status-dot"></span>
+
+            <span id="engineState">选择照片开始分析</span>
+
+        </div>
+
+    </header>
+
+
+
+<div class="demo-tools">
+  <a href="/projects/ci-composition/">← 作品集</a>
+  <label for="fileInput" class="tool-button">选择 / 更换照片</label>
+  <button type="button" class="tool-button" id="demoImage">试用示例图</button>
+  <button type="button" class="tool-button" id="cancelAnalysis" hidden>取消</button>
+  <a class="tool-button" id="downloadAnalysis" download="CI-analysis.jpg" hidden>下载标注图</a>
+  <span id="runtimeMessage" role="status">照片仅在当前浏览器处理，不上传服务器。</span>
+</div>
+
+    <main class="main">
+
+        <section class="viewer">
+
+            <div class="viewer-top" id="viewerTop">
+
+                <div class="viewer-label">
+                    ANALYZED FRAME / CV OVERLAY
+                </div>
+
+            </div>
+
+
+            <div class="image-area">
+
+                <div class="empty-state" id="emptyState">
+
+                    <div class="empty-icon">
+                        +
+                    </div>
+
+                    <div class="empty-title">
+                        Analyze a photographic frame
+                    </div>
+
+                    <div class="empty-sub">
+                        Upload a landscape, architectural or
+                        street photograph. The engine will estimate
+                        composition structure, tonal distribution,
+                        visual flow and perspective.
+                    </div>
+
+                    <label
+                        for="fileInput"
+                        class="upload-button"
+                    >
+                        SELECT IMAGE
+                    </label>
+
+                </div>
+
+
+                <img
+                    id="resultImage"
+                    alt="Composition analysis"
+                >
+
+            </div>
+
+
+            <div
+                class="processing"
+                id="processing"
+            >
+
+                <div class="processing-box">
+
+                    <div class="processing-title">
+                        ANALYZING COMPOSITION
+                    </div>
+
+                    <div class="progress">
+                        <div class="progress-bar"></div>
+                    </div>
+
+                    <div class="processing-sub">
+                        EDGE STRUCTURE · PERSPECTIVE · TONAL RANGE
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <aside class="sidebar">
+
+            <div class="sidebar-title">
+                COMPOSITION<br>
+                INTELLIGENCE
+            </div>
+
+            <div class="sidebar-sub">
+                DETERMINISTIC COMPUTER VISION ANALYSIS
+            </div>
+
+            <div class="rule"></div>
+
+
+            <div class="score-label">
+                COMPOSITION SCORE
+            </div>
+
+            <div class="score-row">
+
+                <div
+                    class="score"
+                    id="score"
+                >
+                    —
+                </div>
+
+                <div class="score-max">
+                    / 100
+                </div>
+
+            </div>
+
+            <div
+                class="status"
+                id="status"
+            >
+                WAITING FOR IMAGE
+            </div>
+
+
+            <div class="metrics">
+
+                <div class="metric">
+
+                    <div class="metric-head">
+
+                        <span>
+                            VISUAL FLOW
+                        </span>
+
+                        <span
+                            class="metric-value"
+                            id="flowValue"
+                        >
+                            —
+                        </span>
+
+                    </div>
+
+                    <div class="metric-track">
+
+                        <div
+                            class="metric-fill"
+                            id="flowBar"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <div class="metric-head">
+
+                        <span>
+                            VISUAL BALANCE
+                        </span>
+
+                        <span
+                            class="metric-value"
+                            id="balanceValue"
+                        >
+                            —
+                        </span>
+
+                    </div>
+
+                    <div class="metric-track">
+
+                        <div
+                            class="metric-fill"
+                            id="balanceBar"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <div class="metric-head">
+
+                        <span>
+                            PERSPECTIVE
+                        </span>
+
+                        <span
+                            class="metric-value"
+                            id="perspectiveValue"
+                        >
+                            —
+                        </span>
+
+                    </div>
+
+                    <div class="metric-track">
+
+                        <div
+                            class="metric-fill yellow"
+                            id="perspectiveBar"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <div class="metric-head">
+
+                        <span>
+                            HORIZON CONTROL
+                        </span>
+
+                        <span
+                            class="metric-value"
+                            id="horizonValue"
+                        >
+                            —
+                        </span>
+
+                    </div>
+
+                    <div class="metric-track">
+
+                        <div
+                            class="metric-fill"
+                            id="horizonBar"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <div class="metric-head">
+
+                        <span>
+                            TONAL / EXPOSURE
+                        </span>
+
+                        <span
+                            class="metric-value"
+                            id="tonalValue"
+                        >
+                            —
+                        </span>
+
+                    </div>
+
+                    <div class="metric-track">
+
+                        <div
+                            class="metric-fill"
+                            id="tonalBar"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <div class="metric-head">
+
+                        <span>
+                            DEPTH
+                        </span>
+
+                        <span
+                            class="metric-value"
+                            id="depthValue"
+                        >
+                            —
+                        </span>
+
+                    </div>
+
+                    <div class="metric-track">
+
+                        <div
+                            class="metric-fill blue"
+                            id="depthBar"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-title">
+                    AI COMPOSITION INSIGHT
+                </div>
+
+                <div id="insights">
+
+                    <div class="insight">
+                        Upload an image to generate structural insights.
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-title">
+                    RECOMMENDATION
+                </div>
+
+                <div id="recommendations">
+
+                    <div class="recommendation">
+                        Awaiting composition analysis.
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-title">
+                    TECHNICAL TELEMETRY
+                </div>
+
+                <div class="telemetry">
+
+                    <div class="telemetry-item">
+
+                        <div class="telemetry-label">
+                            RESOLUTION
+                        </div>
+
+                        <div
+                            class="telemetry-value"
+                            id="resolution"
+                        >
+                            —
+                        </div>
+
+                    </div>
+
+
+                    <div class="telemetry-item">
+
+                        <div class="telemetry-label">
+                            ASPECT RATIO
+                        </div>
+
+                        <div
+                            class="telemetry-value"
+                            id="aspect"
+                        >
+                            —
+                        </div>
+
+                    </div>
+
+
+                    <div class="telemetry-item">
+
+                        <div class="telemetry-label">
+                            HIGHLIGHT CLIP
+                        </div>
+
+                        <div
+                            class="telemetry-value"
+                            id="highlight"
+                        >
+                            —
+                        </div>
+
+                    </div>
+
+
+                    <div class="telemetry-item">
+
+                        <div class="telemetry-label">
+                            SHADOW CLIP
+                        </div>
+
+                        <div
+                            class="telemetry-value"
+                            id="shadow"
+                        >
+                            —
+                        </div>
+
+                    </div>
+
+
+                    <div class="telemetry-item">
+
+                        <div class="telemetry-label">
+                            HORIZON
+                        </div>
+
+                        <div
+                            class="telemetry-value"
+                            id="horizonTelemetry"
+                        >
+                            —
+                        </div>
+
+                    </div>
+
+
+                    <div class="telemetry-item">
+
+                        <div class="telemetry-label">
+                            VP CONFIDENCE
+                        </div>
+
+                        <div
+                            class="telemetry-value"
+                            id="vpTelemetry"
+                        >
+                            —
+                        </div>
+
+                    </div>
+
+
+                    <div class="telemetry-item">
+
+                        <div class="telemetry-label">
+                            VP COORDINATE
+                        </div>
+
+                        <div
+                            class="telemetry-value"
+                            id="vpCoordinate"
+                        >
+                            —
+                        </div>
+
+                    </div>
+
+
+                    <div class="telemetry-item">
+
+                        <div class="telemetry-label">
+                            THIRD PLACEMENT
+                        </div>
+
+                        <div
+                            class="telemetry-value"
+                            id="thirdsTelemetry"
+                        >
+                            —
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="footer">
+
+                <span>
+                    COMPOSITION INTELLIGENCE / V10
+                </span>
+
+                <span>
+                    OPENCV ENGINE
+                </span>
+
+            </div>
+
+        </aside>
+
+    </main>
+
+</div>
+
+
+<input
+    type="file"
+    id="fileInput"
+    accept="image/*"
+>
+
+
+<script src="./engine-client.js"></script>
+<script>
+
+const fileInput =
+    document.getElementById("fileInput");
+
+const emptyState =
+    document.getElementById("emptyState");
+
+const resultImage =
+    document.getElementById("resultImage");
+
+const processing =
+    document.getElementById("processing");
+
+const viewerTop =
+    document.getElementById("viewerTop");
+
+
+fileInput.addEventListener(
+    "change",
+    async function () {
+
+        const file = this.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        await analyze(file);
+    }
+);
+
+
+async function analyze(file) {
+    if (window.ciBusy) return;
+    window.ciBusy = true;
+    processing.style.display = "flex";
+    document.getElementById("demoImage").disabled = true;
+    document.getElementById("cancelAnalysis").hidden = false;
+    document.getElementById("downloadAnalysis").hidden = true;
+    const message = document.getElementById("runtimeMessage");
+    try {
+        const data = await CIEngine.analyze(file, text => {
+            message.textContent = text;
+            document.getElementById("engineState").textContent = "分析中";
+        });
+        updateDashboard(data);
+        const download = document.getElementById("downloadAnalysis");
+        download.href = "data:image/jpeg;base64," + data.annotated_image;
+        download.hidden = false;
+        message.textContent = "分析完成。照片仅在当前浏览器处理，不上传服务器。";
+        document.getElementById("engineState").textContent = "分析完成";
+    } catch (error) {
+        message.textContent = error.message;
+        document.getElementById("engineState").textContent = "请选择照片重试";
+    } finally {
+        processing.style.display = "none";
+        document.getElementById("demoImage").disabled = false;
+        document.getElementById("cancelAnalysis").hidden = true;
+        fileInput.value = "";
+        window.ciBusy = false;
+    }
+}
+document.getElementById("cancelAnalysis").onclick = () => CIEngine.cancel();
+document.getElementById("demoImage").onclick = async () => {
+    try {
+        const response = await fetch("./sample.svg");
+        if (!response.ok) throw new Error("示例图加载失败，请自行选择照片。");
+        await analyze(new File([await response.blob()], "示例路景.svg", {type: "image/svg+xml"}));
+    } catch (error) { document.getElementById("runtimeMessage").textContent = error.message; }
+};
+
+function setMetric(
+    valueId,
+    barId,
+    value
+) {
+
+    const safe =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                Number(value) || 0
+            )
+        );
+
+    document.getElementById(
+        valueId
+    ).textContent =
+        Math.round(safe);
+
+    document.getElementById(
+        barId
+    ).style.width =
+        safe + "%";
+}
+
+
+function updateDashboard(data) {
+
+    emptyState.style.display =
+        "none";
+
+    resultImage.style.display =
+        "block";
+
+    viewerTop.style.display =
+        "block";
+
+
+    resultImage.src =
+        "data:image/jpeg;base64," +
+        data.annotated_image;
+
+
+    document.getElementById(
+        "score"
+    ).textContent =
+        data.score;
+
+
+    document.getElementById(
+        "status"
+    ).textContent =
+        data.status;
+
+
+    setMetric(
+        "flowValue",
+        "flowBar",
+        data.visual_flow
+    );
+
+    setMetric(
+        "balanceValue",
+        "balanceBar",
+        data.visual_balance
+    );
+
+    setMetric(
+        "perspectiveValue",
+        "perspectiveBar",
+        data.perspective
+    );
+
+    setMetric(
+        "horizonValue",
+        "horizonBar",
+        data.horizon_control
+    );
+
+    setMetric(
+        "tonalValue",
+        "tonalBar",
+        data.tonal_exposure
+    );
+
+    setMetric(
+        "depthValue",
+        "depthBar",
+        data.depth
+    );
+
+
+    const insights =
+        document.getElementById(
+            "insights"
+        );
+
+    insights.innerHTML = "";
+
+    data.insights.forEach(
+        function (text) {
+
+            const item =
+                document.createElement(
+                    "div"
+                );
+
+            item.className =
+                "insight";
+
+            item.textContent =
+                text;
+
+            insights.appendChild(
+                item
+            );
+        }
+    );
+
+
+    const recommendations =
+        document.getElementById(
+            "recommendations"
+        );
+
+    recommendations.innerHTML = "";
+
+    data.recommendations.forEach(
+        function (text) {
+
+            const item =
+                document.createElement(
+                    "div"
+                );
+
+            item.className =
+                "recommendation";
+
+            item.textContent =
+                text;
+
+            recommendations.appendChild(
+                item
+            );
+        }
+    );
+
+
+    document.getElementById(
+        "resolution"
+    ).textContent =
+        data.resolution;
+
+
+    document.getElementById(
+        "aspect"
+    ).textContent =
+        data.aspect_ratio;
+
+
+    document.getElementById(
+        "highlight"
+    ).textContent =
+        data.exposure.highlight_clip +
+        "%";
+
+
+    document.getElementById(
+        "shadow"
+    ).textContent =
+        data.exposure.shadow_clip +
+        "%";
+
+
+    document.getElementById(
+        "horizonTelemetry"
+    ).textContent =
+        (
+            data.horizon.angle >= 0
+                ? "+"
+                : ""
+        )
+        +
+        data.horizon.angle
+        +
+        "°";
+
+
+    document.getElementById(
+        "vpTelemetry"
+    ).textContent =
+        data.vanishing_point.confidence +
+        "%";
+
+
+    document.getElementById(
+        "vpCoordinate"
+    ).textContent =
+        "(" +
+        data.vanishing_point.x +
+        ", " +
+        data.vanishing_point.y +
+        ")";
+
+
+    document.getElementById(
+        "thirdsTelemetry"
+    ).textContent =
+        data.thirds +
+        "/100";
+}
+
+
+</script>
+
+</body>
+</html>
