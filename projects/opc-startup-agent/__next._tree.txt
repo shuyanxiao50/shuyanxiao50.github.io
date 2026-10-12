@@ -1,5 +1,5 @@
-:HL["/_next/static/chunks/3h0g64ctzv7wu.css","style"]
+:HL["/_next/static/chunks/26id608ba-sgs.css","style"]
 3:[["children",{"s":"__PAGE__","h":160}]]
 2:[["children",{"s":{"n":"slug","t":"d","k":"opc-startup-agent","s":[]},"h":96,"c":"$Q3"}]]
 1:[["children",{"s":"projects","h":96,"c":"$Q2"}]]
-0:{"b":"2pAnAxKqg8qA_b6qxy-22","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
+0:{"b":"6UralmpWn4o_xK_zy8dF5","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
