@@ -15,3 +15,6 @@ reference-review.pdf、references.md、sources.md和codes.md用于团队研究�
 在线网页提供可直接阅读的正文、FAQ筛选与文件下载，不需要登录。平台URL抓取应使用knowledge.md等正文地址并核对预览，网页可打开不等于平台已成功入库。
 
 当前交付没有修改线上Agent或挂载插件，没有接通新的编码事件、语音回传、审批、视觉投放或设备动作。硬件实际状态仍以队友与硬件聊天的实测记录为准。
+
+
+可直接编辑的Word：knowledge-handbook.docx、reference-review.docx；Excel：xiaotong-knowledge.xlsx。动态网页支持搜索、分类筛选和下载。
