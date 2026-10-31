@@ -1,0 +1,186 @@
+[
+  {
+    "id": "S01",
+    "title": "OpenAI Codex App Server",
+    "url": "https://learn.chatgpt.com/docs/app-server",
+    "type": "官方技术文档",
+    "note": "提供会话和轮次事件、审批请求与客户端响应机制。可研究受支持客户端桥接，不能据此声称已控制当前桌面应用。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S02",
+    "title": "HachimoDock",
+    "url": "https://github.com/YizhengWw/HachimoDock",
+    "type": "作者仓库与README",
+    "note": "桌面管理器与ESP32-P4设备协作，展示编码会话状态与语音交互。只借鉴状态交接思路。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S03",
+    "title": "HachimoDock项目许可证",
+    "url": "https://github.com/YizhengWw/HachimoDock/blob/main/LICENSE",
+    "type": "作者许可证",
+    "note": "自定义非商业源码可见许可；独立产品开发等用途需要另行许可，不应标为标准开源或直接移植。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S04",
+    "title": "VibeKeys应用与配置",
+    "url": "https://github.com/second-state/vibekeys_app",
+    "type": "作者仓库与README",
+    "note": "实体键映射语音、接受、退出等操作；简单按键宏不理解具体权限范围。GPL-3.0，采用前审查义务。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S05",
+    "title": "VibeKeys固件",
+    "url": "https://github.com/second-state/vibekeys_firmware",
+    "type": "作者仓库与README",
+    "note": "硬件固件可供分工与消息传输参考；本次仓库元数据未识别许可证，不能默认可复制。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S06",
+    "title": "VibeBoard",
+    "url": "https://github.com/zuichen123/VibeBoard",
+    "type": "作者仓库与README",
+    "note": "将编码状态映射到实体按键、灯光与交互。并非所有同类键盘都是三键，本次未确认其许可证。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S07",
+    "title": "Deepgram Vibe Coder",
+    "url": "https://github.com/deepgram/vibe_coder",
+    "type": "作者仓库与README",
+    "note": "语音编码与编辑器操作参考；依赖其服务和编辑器集成，不是灵机一动即装即用插件。MIT。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S08",
+    "title": "PosturePal",
+    "url": "https://github.com/shensquared/PosturePal",
+    "type": "作者仓库与README",
+    "note": "摄像头姿态监测、个人校准与提醒参考，MIT。桌面软件环境与本项目主控不同，不把项目阈值当医学结论。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S09",
+    "title": "UPRIGHT个人校准说明",
+    "url": "https://www.uprightpose.com/blog/calibration/",
+    "type": "品牌使用说明",
+    "note": "可借鉴用户自己的舒适基准和重新校准流程。该产品是佩戴式方案，不等同摄像头模型。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S10",
+    "title": "EKO倩影系列感应环境桶",
+    "url": "https://www.eko.com.cn/products/sensor-bins/倩影系列感应环境桶/",
+    "type": "品牌产品说明",
+    "note": "参考感应与手动模式、缓闭等交互。感应器靠近触发不等于视觉识别投放意图。 本轮产品页直开超时，官方搜索索引仍可找到；具体参数需再核对。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S11",
+    "title": "Smart-Bin",
+    "url": "https://github.com/2black0/Smart-Bin",
+    "type": "作者仓库与README",
+    "note": "Arduino、超声测距和舵机的垃圾桶示例，MIT。可参考开关状态，不能证明视觉理解或防夹。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S12",
+    "title": "Mori Quiet Lamp支持页",
+    "url": "https://www.onekindartifact.com/eu/support/categories/dd8adb14-8c2c-4154-91d6-152d22e6c9dc",
+    "type": "品牌支持说明",
+    "note": "参考安静模式、柔和灯光和明确的用户控制入口。避免照搬造型或品牌。 本轮重读Lamp模式，参考降低存在感和亮度选择。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S13",
+    "title": "LivingAI EMO",
+    "url": "https://living.ai/emo/",
+    "type": "品牌产品说明",
+    "note": "参考桌面伙伴的语音、动作与状态表达。产品宣传不证明小桶具有同等识别或运动能力。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S14",
+    "title": "小智ESP32",
+    "url": "https://github.com/78/xiaozhi-esp32",
+    "type": "作者仓库与README",
+    "note": "参考唤醒、语音链路及工具控制分工，MIT。其当前SDK和板型要求需另核，不能替换比赛要求的平台与主板。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S15",
+    "title": "Ulanzi Vibe Key软件说明",
+    "url": "https://docs.ulanzistudio.com/vibekey/en/software/",
+    "type": "品牌配置文档",
+    "note": "明确采用语音、确认、拒绝三个核心按键加旋钮；语音通过配置第三方快捷键实现。小桶可参考三个明确入口，而不照搬其权限含义。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S16",
+    "title": "VibeKeys远程语音配置",
+    "url": "https://vibekeys.dev/docs/voice-input/",
+    "type": "项目配置文档",
+    "note": "按住或切换录音、识别后校对、确认提交或取消。语音识别需要另外配置服务，实体按键本身不等于智能理解。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S17",
+    "title": "Ulanzi Codex与Claude状态同步",
+    "url": "https://docs.ulanzistudio.com/vibekey/faq/codex-claude-status.html",
+    "type": "品牌技术说明",
+    "note": "通过配套软件尝试安装Hooks取得状态；灯光聚焦单一会话，不用叠加节奏表示待批数量。仅为厂商方案说明，未在小桶验证。 本轮重读：单一焦点会话；审批数量不靠多次闪烁表达。没有安装厂商Hooks。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S18",
+    "title": "Ulanzi AU05-X WorkBuddy联名款配置",
+    "url": "https://docs.ulanzistudio.com/vibekey/au05-x/",
+    "type": "品牌配置说明",
+    "note": "三个核心键与旋钮支持语音、发送或确认、取消等交互，并有多种工作流预设。具体快捷键受系统、预设和目标软件影响。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S19",
+    "title": "Vite排错文档",
+    "url": "https://vite.dev/guide/troubleshooting.html",
+    "type": "官方开发文档",
+    "note": "作为开发环境与构建问题的查证入口；先收集版本、启动方式和完整错误，不把不同错误混为单一原因。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S20",
+    "title": "MDN跨源资源共享",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS",
+    "type": "Web技术文档",
+    "note": "跨源访问由浏览器及服务端响应规则共同约束，排查时核对请求与响应；不建议把关闭浏览器安全机制作为通用解法。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S21",
+    "title": "Vite环境变量与模式",
+    "url": "https://vite.dev/guide/env-and-mode.html",
+    "type": "官方开发文档",
+    "note": "客户端暴露的环境变量可能进入构建产物，不把后端私密凭据放入公开前端变量；开发与生产配置需分别核对。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S22",
+    "title": "Vite静态部署",
+    "url": "https://vite.dev/guide/static-deploy.html",
+    "type": "官方开发文档",
+    "note": "区分本地预览、构建产物和真实部署；本地preview不应被当作生产服务。小桶不把网页可访问等同业务正确。",
+    "checked_at": "2026-10-31"
+  },
+  {
+    "id": "S23",
+    "title": "GitHub合并冲突",
+    "url": "https://docs.github.com/en/pull-requests/reference/merge-conflicts",
+    "type": "官方开发文档",
+    "note": "冲突需要确定最终应保留的内容；不能仅凭“选最新”覆盖队友修改。示例用于澄清和交接，不自动实施合并。",
+    "checked_at": "2026-10-31"
+  }
+]

@@ -1,0 +1,102 @@
+[
+  {
+    "name": "PosturePal",
+    "repo": "shensquared/PosturePal",
+    "license": "MIT",
+    "priority": "优先评估",
+    "borrow": "个人校准、持续偏离与暂停策略",
+    "limits": "Python与桌面摄像头环境；不能直接部署为主板姿态固件。",
+    "decision": "待用户确认，未下载或复用",
+    "source_entries": [
+      "https://github.com/shensquared/PosturePal/blob/main/pose_webcam.py",
+      "https://github.com/shensquared/PosturePal/blob/main/config.json"
+    ],
+    "license_url": "https://github.com/shensquared/PosturePal/blob/main/LICENSE"
+  },
+  {
+    "name": "Smart-Bin",
+    "repo": "2black0/Smart-Bin",
+    "license": "MIT",
+    "priority": "优先评估",
+    "borrow": "开关状态与舵机控制示例",
+    "limits": "Arduino及超声波距离触发，不是摄像头投放识别；引脚、电压与限位须重新设计。",
+    "decision": "待用户确认，未下载或复用",
+    "source_entries": [
+      "https://github.com/2black0/Smart-Bin/blob/master/Project/main.ino"
+    ],
+    "license_url": "https://github.com/2black0/Smart-Bin/blob/master/LICENSE"
+  },
+  {
+    "name": "Deepgram Vibe Coder",
+    "repo": "deepgram/vibe_coder",
+    "license": "MIT",
+    "priority": "按需评估",
+    "borrow": "口述到编码指令的交互组织",
+    "limits": "依赖Deepgram及编辑器接口；不能替代灵机一动核心语音链路。",
+    "decision": "待用户确认，未下载或复用",
+    "source_entries": [
+      "https://github.com/deepgram/vibe_coder/blob/main/src/services/dictation-service.ts",
+      "https://github.com/deepgram/vibe_coder/blob/main/src/services/voice-agent-service.ts"
+    ],
+    "license_url": "https://github.com/deepgram/vibe_coder/blob/main/LICENSE"
+  },
+  {
+    "name": "小智ESP32",
+    "repo": "78/xiaozhi-esp32",
+    "license": "MIT",
+    "priority": "按需评估",
+    "borrow": "唤醒、语音与设备工具的工程分工",
+    "limits": "当前分支要求的SDK与项目固定SDK不同；不建议整包替换比赛固件。",
+    "decision": "待用户确认，未下载或复用",
+    "source_entries": [
+      "https://github.com/78/xiaozhi-esp32/blob/main/main/application.cc",
+      "https://github.com/78/xiaozhi-esp32/blob/main/main/device_state_machine.cc",
+      "https://github.com/78/xiaozhi-esp32/blob/main/main/mcp_server.cc"
+    ],
+    "license_url": "https://github.com/78/xiaozhi-esp32/blob/main/LICENSE"
+  },
+  {
+    "name": "VibeKeys App",
+    "repo": "second-state/vibekeys_app",
+    "license": "GPL-3.0",
+    "priority": "先看交互",
+    "borrow": "语音、接受、退出等实体快捷入口",
+    "limits": "复制集成需核对GPL义务；YOLO或按键y映射不能代替本次具体授权。",
+    "decision": "待用户确认，未下载或复用",
+    "source_entries": [],
+    "license_url": "https://github.com/second-state/vibekeys_app/blob/main/LICENSE"
+  },
+  {
+    "name": "VibeKeys Firmware",
+    "repo": "second-state/vibekeys_firmware",
+    "license": "本次未确认",
+    "priority": "仅阅读参考",
+    "borrow": "实体按键与主机协作方式",
+    "limits": "仓库元数据无识别许可证，未获得采用许可结论；硬件配置不同。",
+    "decision": "待用户确认，未下载或复用",
+    "source_entries": [],
+    "license_url": "本次未找到可确认许可的依据，暂不列采用入口"
+  },
+  {
+    "name": "VibeBoard",
+    "repo": "zuichen123/VibeBoard",
+    "license": "本次未确认",
+    "priority": "仅阅读参考",
+    "borrow": "编码状态到灯光/实体操作的映射",
+    "limits": "未确认许可证与本项目板型适配；不是本项目现成组件。",
+    "decision": "待用户确认，未下载或复用",
+    "source_entries": [],
+    "license_url": "本次未找到可确认许可的依据，暂不列采用入口"
+  },
+  {
+    "name": "HachimoDock",
+    "repo": "YizhengWw/HachimoDock",
+    "license": "自定义非商业源码可见许可",
+    "priority": "仅研究产品思路",
+    "borrow": "桌面与编码会话状态交接",
+    "limits": "不是标准开源许可；当前许可对开发独立软件/硬件产品要求另行授权，不能直接拿来做小桶。ESP32-P4也不同。",
+    "decision": "待用户确认；采用前还需权利人许可，未下载或复用",
+    "source_entries": [],
+    "license_url": "https://github.com/YizhengWw/HachimoDock/blob/main/LICENSE"
+  }
+]
