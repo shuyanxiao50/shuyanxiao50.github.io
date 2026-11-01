@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0a1016">
+  <meta name="description" content="小桶：vibe coding桌面迷你垃圾桶伙伴。模型有动静，小兽来喊你。探索模型回答提示、智能语音录入、坐姿提醒与情绪陪伴的产品场景、外观和硬件链路。">
+  <meta property="og:title" content="小桶｜模型有动静，小兽来喊你。">
+  <meta property="og:description" content="一只会接话的桌面迷你垃圾桶伙伴。产品交互示意、可旋转外观参考、结构说明与项目进展。">
+  <meta property="og:image" content="https://shuyanxiao50.github.io/xiaotong/assets/hero.webp">
+  <meta property="og:url" content="https://shuyanxiao50.github.io/xiaotong/">
+  <link rel="canonical" href="https://shuyanxiao50.github.io/xiaotong/">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <title>小桶｜Vibe Coding 桌面迷你垃圾桶伙伴</title>
+  <script>document.documentElement.classList.add('js')</script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a href="#main" class="skip-link">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="#" aria-label="小桶，回到顶部"><img src="assets/favicon.svg" alt="" width="36" height="36"><span>小桶<span class="brand-dot">.</span></span></a>
+    <button class="menu-toggle" aria-label="展开导航" aria-controls="navLinks" aria-expanded="false"><span></span><span></span></button>
+    <nav class="navlinks" id="navLinks" aria-label="主导航">
+      <a href="#experience">交互场景</a><a href="#design">外观与建模</a><a href="#system">硬件链路</a><a href="#progress">项目进展</a><a class="nav-cta" href="#resources">项目资料 <span aria-hidden="true">↗</span></a>
+    </nav>
+  </header>
+  <main id="main">
+    <section class="hero section-wrap" aria-labelledby="heroTitle">
+      <div class="hero-art"><img src="assets/hero.webp" alt="淡紫色圆润小兽停在编码电脑旁，嘴部为翻盖，侧面有黑色轮胎与米白轮毂" width="1448" height="1086" fetchpriority="high"><span class="image-note">外观概念 · 场景合成</span></div>
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="signal-mark" aria-hidden="true"></span>VIBE CODING DESKTOP COMPANION</p>
+        <h1 id="heroTitle">模型有动静，<br><em>小兽来喊你。</em></h1>
+        <p class="hero-intro">一只会接话的桌面迷你垃圾桶伙伴。<br>把 AI 的回答、提问与需要你决定的时刻，<br class="desktop-only">带到你听得到的地方。</p>
+        <div class="identity-line"><span>桌面垃圾桶</span><b>×</b><span>情绪垃圾桶</span><b>×</b><span>坐姿监测助手</span><b>×</b><span>Vibe Coding 助手</span><b>×</b><span>智能语音录入</span></div>
+        <div class="hero-actions"><a class="button primary" href="#experience">看一次交互 <span aria-hidden="true">↓</span></a><a class="button quiet" href="#design">探索小兽外观 <span aria-hidden="true">↗</span></a></div>
+        <div class="hero-meta"><span>无屏表达</span><i></i><span>语音接话</span><i></i><span>桌面陪伴</span></div>
+      </div>
+      <div class="hero-index mono">DESIGNED TO KEEP THE CONVERSATION GOING <span>01 / 06</span></div>
+    </section>
+
+    <section class="moment section-wrap" aria-labelledby="momentTitle">
+      <div class="section-kicker"><span>01 / WHY XIAOTONG</span><span>从屏幕里，走到你身边</span></div>
+      <div class="section-heading"><h2 id="momentTitle">等回复，<br>不必一直盯着屏幕。</h2><p>Vibe Coding 的节奏，是生成、等待、追问、再继续。小桶想接住的，是这些需要人重新接话的时刻。</p></div>
+      <div class="moment-grid">
+        <article><span class="mono mini-index">01</span><h3>回答好了，听到提醒。</h3><p>从“反复切回窗口看进度”，变成在真实回答或任务状态到达时，收到简短的声光提醒。</p></article>
+        <article><span class="mono mini-index">02</span><h3>有了想法，直接说。</h3><p>被唤醒后，把下一步需求、补充说明或对模型的回答，口述给小桶，再衔接当前编码会话。</p></article>
+        <article><span class="mono mini-index">03</span><h3>需要决定，解释清楚。</h3><p>先说清哪个任务、要做什么，再由你对这一次具体请求允许、拒绝或稍后处理。</p></article>
+      </div>
+    </section>
+
+    <section class="experience section-wrap" id="experience" aria-labelledby="experienceTitle">
+      <div class="section-kicker"><span>02 / A CONVERSATION IN MOTION</span><span class="status-outline">静态交互示意</span></div>
+      <div class="section-heading"><h2 id="experienceTitle">开口，<em>就能接着聊。</em></h2><p>选一个桌面场景，看看电脑、小桶和你怎样完成一次交接。</p></div>
+      <div class="experience-layout">
+        <div class="scene-selector" role="tablist" aria-label="产品场景" aria-orientation="vertical">
+          <button role="tab" id="scene-done" aria-selected="true" aria-controls="scenePanel" data-scene="done"><span class="mono">01</span>模型答好了<span class="tab-arrow">↗</span></button>
+          <button role="tab" id="scene-question" aria-selected="false" aria-controls="scenePanel" tabindex="-1" data-scene="question"><span class="mono">02</span>模型想问你<span class="tab-arrow">↗</span></button>
+          <button role="tab" id="scene-approval" aria-selected="false" aria-controls="scenePanel" tabindex="-1" data-scene="approval"><span class="mono">03</span>需要你确认<span class="tab-arrow">↗</span></button>
+          <button role="tab" id="scene-error" aria-selected="false" aria-controls="scenePanel" tabindex="-1" data-scene="error"><span class="mono">04</span>任务中断了<span class="tab-arrow">↗</span></button>
+          <button role="tab" id="scene-posture" aria-selected="false" aria-controls="scenePanel" tabindex="-1" data-scene="posture"><span class="mono">05</span>坐姿小提醒<span class="tab-arrow">↗</span></button>
+          <button role="tab" id="scene-emotion" aria-selected="false" aria-controls="scenePanel" tabindex="-1" data-scene="emotion"><span class="mono">06</span>想吐槽两句<span class="tab-arrow">↗</span></button>
+          <button role="tab" id="scene-bin" aria-selected="false" aria-controls="scenePanel" tabindex="-1" data-scene="bin"><span class="mono">07</span>桌面小垃圾<span class="tab-arrow">↗</span></button>
+        </div>
+        <div class="scene-panel" id="scenePanel" role="tabpanel" aria-labelledby="scene-done" tabindex="0">
+          <div class="scene-topline"><span class="mono" id="sceneType">REPLY READY → VOICE INPUT</span><span id="sceneCount" class="mono">01 / 07</span></div>
+          <h3 id="sceneTitle">回答到达，下一句交给你。</h3>
+          <p id="sceneContext" class="scene-context">你暂时把视线从编辑器移开，模型完成了这一轮回复。</p>
+          <div class="dialogue" id="dialogue" aria-live="polite">
+            <div class="dialogue-line"><span class="speaker">电脑 / 模型</span><p>本轮回答已生成，等待下一步需求。</p></div>
+            <div class="dialogue-line creature"><span class="speaker">小桶</span><p>模型答好了，接着做什么？</p></div>
+            <div class="dialogue-line person"><span class="speaker">你</span><p>OK，接下来生成一份静态展示网页。</p></div>
+          </div>
+          <div class="scene-outcome"><span class="micro-label">目标结果</span><p id="sceneOutcome">把这一轮口述转成需求，送回当前编码会话，等待真实回执。</p></div>
+          <div class="step-strip" id="demoSteps" aria-label="当前示意步骤"></div>
+          <div class="scene-controls"><span id="stepDescription">事件输入 · 来自编码工具的可信状态</span><button id="nextStep" class="text-button">查看下一步 <span aria-hidden="true">→</span></button></div>
+          <p class="demo-footnote" id="sceneCondition">接入条件：真实模型事件、语音转写与会话回传接口。</p>
+        </div>
+      </div>
+      <p class="section-note">这里展示的是交互设计，点击不会连接麦克风、编码工具或设备，也不代表对应功能已经验收。</p>
+    </section>
+
+    <section class="design-section" id="design" aria-labelledby="designTitle">
+      <div class="section-wrap">
+        <div class="section-kicker"><span>03 / A LITTLE CREATURE ON YOUR DESK</span><span>形态与结构</span></div>
+        <div class="section-heading"><h2 id="designTitle">圆一点，<br>离你近一点。</h2><p>圆润饱满的身体、前伸的嘴盖、黑色侧轮和温暖的灯点。让设备像一个愿意靠近的桌面伙伴。</p></div>
+        <div class="design-layout">
+          <div class="model-stage" id="modelStage">
+            <img id="modelPoster" src="assets/original-reference.webp" alt="用户选定的原始小兽网格外观参考，淡紫壳体与米白嘴盖" width="1100" height="1100" loading="lazy">
+            <div class="model-toolbar"><span class="mono">APPEARANCE REFERENCE</span><button id="loadModel" class="model-load">载入 3D 外观 <span aria-hidden="true">↗</span></button></div>
+            <p id="modelStatus" class="model-status" aria-live="polite">点击载入后，可拖动旋转、滚轮缩放。</p>
+          </div>
+          <div class="design-principles">
+            <article><span class="mono">01 / EXPRESSION</span><h3>无屏，也有回应。</h3><p>用灯光、声音和嘴盖动作承接反馈，让交互从屏幕上的一行字，变成桌面上可感知的回应。</p></article>
+            <article><span class="mono">02 / FORM</span><h3>保留小兽的饱满感。</h3><p>延续用户选定的 WorkBuddy 原始小兽参考，保持鼓鼓的轮廓、圆弧轮肩和前伸嘴部。</p></article>
+            <article><span class="mono">03 / MECHANISM</span><h3>外观之后，是装配。</h3><p>头身分开、空壳容纳硬件；开嘴与轮组移动使用各自的机构思路。尺寸、转轴、固定点与运动间隙仍需逐项适配。</p></article>
+          </div>
+        </div>
+        <p class="design-caption">3D 为原始外观网格的轻量预览，供观察造型；不是参数化机械 CAD，也不作为打印或装配依据。</p>
+        <div class="structure-gallery">
+          <figure><button class="image-open" data-image="assets/head-open.webp" data-caption="头部张嘴与空腔概念：用于结构讨论，铰链与自动开合仍需实物验证。" aria-label="放大头部结构概念图"><img src="assets/head-open.webp" alt="张嘴的独立小兽头部，展示空腔和底部开口的结构概念" width="1200" height="800" loading="lazy"><span class="zoom-icon" aria-hidden="true">↗</span></button><figcaption><span>头部 / 嘴盖表达与空腔</span><small>AI 结构概念</small></figcaption></figure>
+          <figure><button class="image-open" data-image="assets/body-open.webp" data-caption="带轮空壳身体概念：底部矩形口的设计目标为36×18mm；图像不是精确尺寸图或实物。" aria-label="放大身体结构概念图"><img src="assets/body-open.webp" alt="带黑色轮胎和米白轮毂的小兽身体，顶部敞开，底部有矩形开口的概念图" width="1200" height="800" loading="lazy"><span class="zoom-icon" aria-hidden="true">↗</span></button><figcaption><span>身体 / 轮组与内部空间</span><small>AI 结构概念</small></figcaption></figure>
+        </div>
+        <div class="design-journey"><span>外观参考</span><b>→</b><span>头身分件与接口候选</span><b>→</b><span>硬件适配</span><b>→</b><span>切片、打印与实物验证</span></div>
+      </div>
+    </section>
+
+    <section class="companion section-wrap" aria-labelledby="companionTitle">
+      <div class="section-kicker"><span>04 / MORE THAN A NOTIFICATION</span><span>同一张桌子，多一种照应</span></div>
+      <div class="companion-heading"><h2 id="companionTitle">收下小垃圾，<br>接住小情绪，<br><em>也提醒你坐好。</em></h2><p>编码辅助是主场景。桌面收纳、情绪陪伴和坐姿提醒，让这只小兽在等待任务的间隙，也有存在的意义。</p></div>
+      <div class="companion-rows">
+        <article><span class="mono">DESK</span><h3>桌面垃圾桶</h3><p>给纸团和桌面小垃圾一个去处。视觉投放触发开盖是目标交互，需与实际识别、舵机及开合安全分别联调。</p></article>
+        <article><span class="mono">MOOD</span><h3>情绪垃圾桶</h3><p>报错了，可以吐槽两句；卡住了，先把问题说出来。陪伴来自对话回应，不预设设备能自动判断你的情绪。</p></article>
+        <article><span class="mono">POSTURE</span><h3>坐姿监测助手</h3><p>设备停稳后观察姿态，移动时暂停。姿态偏离时温和提醒，遮挡或结果未知时不武断判断，也不从低头推断在看手机。</p></article>
+      </div>
+    </section>
+
+    <section class="system section-wrap" id="system" aria-labelledby="systemTitle">
+      <div class="section-kicker"><span>05 / FROM SOFTWARE TO THE PHYSICAL WORLD</span><span>硬件与业务链路</span></div>
+      <div class="section-heading"><h2 id="systemTitle">让对话，<br>有一个物理的落点。</h2><p>以灵机一动平台和主板为基础，把语音、意图判断、工具调用与设备反馈串起来，再扩展外部编码会话。</p></div>
+      <div class="system-map" aria-label="架构示意：外部编码工具经待验证桥接连接灵机一动平台，平台连接小桶设备">
+        <article class="system-node"><span class="mono">01 / CONTEXT</span><div class="node-icon" aria-hidden="true">&gt;_</div><h3>电脑上的编码会话</h3><p>真实回答 / 待补充问题<br>本次审批 / 任务异常</p><span class="node-tag pending">外部事件与回传待验证</span></article>
+        <div class="connection"><span>⇄</span><small>事件桥接<br>会话回传</small></div>
+        <article class="system-node platform"><span class="mono">02 / AGENT</span><div class="node-icon" aria-hidden="true">✳</div><h3>灵机一动平台</h3><p>ASR 语音识别 / 意图判断<br>工具调用 / TTS / 设备指令</p><span class="node-tag">核心语音与设备链路</span></article>
+        <div class="connection solid"><span>⇄</span><small>指令下发<br>状态回执</small></div>
+        <article class="system-node"><span class="mono">03 / DEVICE</span><img class="device-icon" src="assets/favicon.svg" alt="" width="60" height="60"><h3>小桶 · 物理伙伴</h3><p>麦克风 / 喇叭 / SPI 摄像头<br>RGB / 舵机与轮组</p><span class="node-tag">灵机一动主板 · ESP32-S3</span></article>
+      </div>
+      <div class="system-notes"><p><strong>两条主线</strong>回答或提问 → 提醒 → 口述续聊；具体审批 → 解释请求 → 本次明确决定。坐姿与投放作为并行支线。</p><p><strong>反馈要可信</strong>有动作回执才说已执行；离线或失败时说明当前结果。普通续聊与高风险权限请求，分别处理。</p></div>
+      <p class="section-note">链路图为产品方案。平台与设备基本闭环按用户最新报告已跑通；这不等于外部编码事件、语音回传与全部机构都已验收。</p>
+    </section>
+
+    <section class="progress-section" id="progress" aria-labelledby="progressTitle">
+      <div class="section-wrap">
+        <div class="section-kicker"><span>06 / BUILDING IN THE OPEN</span><span>状态截至 2026.11.01</span></div>
+        <div class="section-heading"><h2 id="progressTitle">把想法讲清楚，<br>也把进展说准确。</h2><p>设计资料、基础链路与产品交互分别记录。每一步用对应的文件、真实回执和实物观察来确认。</p></div>
+        <div class="progress-grid">
+          <article><div class="progress-label"><i></i>已有进展</div><ul><li><strong>主控与本地诊断</strong><span>ESP32-S3、16MB Flash、8MB PSRAM 已识别；本地诊断程序烧录与串口运行有历史记录。</span></li><li><strong>平台与设备基本闭环</strong><span>采用用户最新“跑通”报告；本网页不将其扩大为全部功能实测通过。</span></li><li><strong>外观与产品资料</strong><span>已形成小兽参考、分体及接口候选、角色话术、知识库与海报；制造和装配状态单独核对。</span></li></ul></article>
+          <article><div class="progress-label pending"><i></i>继续验证</div><ul><li><strong>编码工具的真实接入</strong><span>回答、提问、完成和异常的可信事件，以及口述回传到正确会话。</span></li><li><strong>具体权限与姿态反馈</strong><span>本次审批的对象、范围和回执；真实 SPI 姿态到声光提醒与移动暂停。</span></li><li><strong>开盖、轮组与打印装配</strong><span>机构传动、硬件容纳、接口试配和整套切片工时。模型候选不等于装机成品。</span></li></ul></article>
+        </div>
+        <details><summary>网页里的演示是否连接了真实设备？</summary><p>没有。这是静态产品说明与交互示意页。场景按钮只切换示例内容，3D查看器只呈现外观参考；不会录音、发送编码请求、批准权限或控制设备。真实演示应结合平台日志、工具回执与现场物理反馈。</p></details>
+        <details><summary>小桶可以替我自动批准所有请求吗？</summary><p>目标是让你听清具体请求，并对本次范围说出允许或拒绝。决定仍需回到原工具支持的授权路径；不把模糊回应、过期请求或勿扰模式当作自动放行。实际桥接须独立验证。</p></details>
+      </div>
+    </section>
+
+    <section class="resources section-wrap" id="resources" aria-labelledby="resourcesTitle">
+      <div class="resource-copy"><p class="eyebrow">TAKE A CLOSER LOOK</p><h2 id="resourcesTitle">把小桶，<br><em>带进下一次讨论。</em></h2><p>一张海报讲清价值，一份说明接续方案。资料中心保留角色、话术与知识库，方便团队继续配置与联调。</p><div class="resource-links"><a class="button primary" href="assets/xiaotong-poster-80x180.pdf" target="_blank" rel="noopener">查看产品海报 <span aria-hidden="true">↗</span></a><a class="button quiet" href="project-brief.md" download>下载项目说明 <span aria-hidden="true">↓</span></a></div><a class="library-link" href="https://shuyanxiao50.github.io/xiaotong-agent-20261031/library/v3/" target="_blank" rel="noopener">打开角色与知识库资料中心 <span aria-hidden="true">↗</span></a><p class="resource-caption">海报为竖版 80 × 180 cm。资料中的合成样例用于设计，不作为模型测试成绩。</p></div>
+      <a class="poster-card image-open" href="assets/xiaotong-poster-80x180.pdf" target="_blank" rel="noopener" aria-label="打开80乘180厘米的产品海报PDF"><img src="assets/poster.webp" alt="小桶最新版竖版海报，主标题模型有动静，小兽来喊你" width="1500" height="3375" loading="lazy"><span>产品海报 / 80 × 180 cm <b>↗</b></span></a>
+    </section>
+  </main>
+  <footer class="site-footer section-wrap"><div><a class="brand" href="#"><img src="assets/favicon.svg" alt="" width="32" height="32"><span>小桶.</span></a><p>vibe coding桌面迷你垃圾桶伙伴</p></div><div><span class="mono">INTERCITY HACK · NINGBO</span><p>产品展示与交互说明 · 2026</p><a href="#" class="back-top">回到顶部 ↑</a></div></footer>
+  <dialog id="imageDialog" aria-labelledby="imageCaption"><button id="closeImage" class="dialog-close" aria-label="关闭图片">×</button><img id="largeImage" alt=""><p id="imageCaption"></p></dialog>
+  <noscript><p class="section-wrap section-note">当前浏览器未启用脚本，可继续阅读产品说明与查看海报；场景切换与3D查看需要启用JavaScript。</p></noscript>
+</body>
+</html>
