@@ -1,0 +1,64 @@
+AGV 产线物流动画｜脱敏技术节选
+非完整工程，不作为设备控制或安全验证依据。
+
+单轴行驶与原地转向
+真实源码中的轨迹段规划和采样。把连续行驶、停车和原地转向表示为不同状态，不带任何现场路径坐标。
+
+function axisTrack(initial,steps,initialWheel=0){
+  let from=initial, wheel=initialWheel;
+  const segments=steps.map(([range,x,z,yaw])=>{
+    const [start,end]=range, to=pose(x,0,z,yaw), dx=x-from.x, dz=z-from.z;
+    const length=Math.hypot(dx,dz), angle=yaw-from.yaw;
+    if(end<=start||(dx&&dz)||(length&&angle)||(!length&&Math.abs(Math.abs(angle)-PI/2)>1e-9)){
+      throw new Error('CTU 轨迹段应为单轴直行或原地转 90°');
+    }
+    const curve=length?new THREE.LineCurve3(V(from.x,0,from.z),V(x,0,z)):null;
+    const signed=length*Math.sign(-dx*Math.sin(yaw)-dz*Math.cos(yaw));
+    const step={start,end,from,to,length,curve,wheel,signed,kind:length?'straight':'pivot'};
+    from=to;
+    wheel+=signed;
+    return step;
+  });
+  return {segments,endWheel:wheel,sample(t){
+    const step=segments.find(s=>t<s.end);
+    if(!step)return {body:{...from},wheel,turning:false,phase:'hold'};
+    const {start,end,from:origin,to,curve,signed}=step;
+    if(t<start)return {body:{...origin},wheel:step.wheel,turning:false,phase:'hold'};
+    if(!curve)return {body:pose(origin.x,0,origin.z,lerp(origin.yaw,to.yaw,linearProgress(t,[start,end]))),
+      wheel:step.wheel,turning:true,phase:'pivot'};
+    const q=rigidProgress(t,[start,end]), p=curve.getPoint(q);
+    return {body:pose(p.x,0,p.z,origin.yaw),wheel:step.wheel+signed*q,turning:false,phase:'straight'};
+  }};
+}
+
+协作臂逆运动学
+取自机械臂姿态更新。根据夹持目标和两段臂长求肩、肘及底座方向；展示算法节选，省略上游坐标转换。
+
+    const horizontal=Math.hypot(dx,dz), [a,b]=P.arm;
+    const d=Math.hypot(horizontal,dy);
+    const bend=-Math.acos(THREE.MathUtils.clamp((d*d-a*a-b*b)/(2*a*b),-1,1));
+    const tilt=Math.atan2(dy,horizontal)-Math.atan2(b*Math.sin(bend),a+b*Math.cos(bend));
+    const yaw=signYaw(dx,dz);
+    baseYaw.rotation.y=yaw-state.body.yaw;
+    shoulder.rotation.x=tilt;
+    elbow.rotation.x=bend;
+
+腕部视觉相机的父子关系
+从腕部相机代码摘出挂载和光轴朝向。原安装坐标替换为 mount 参数；具体尺寸、模型细节和客户素材均不包含在片段内。
+
+  const visionCam=makeGroup(tool);
+  visionCam.name='腕部视觉相机';
+  const imager=makeGroup(visionCam, mount.x, mount.y, mount.z);
+  const sight=V(0,0,-P.wristOffset).sub(imager.position).normalize();
+  imager.quaternion.setFromUnitVectors(V(0,0,1),sight);
+
+结构化提示词摘编
+以 V16 的局部修改为例，保留任务书的方法，并将坐标和验收数值概括为检查条件。
+
+基线：沿用已验收的动画版本。
+本轮：只调整两段协作臂比例，并为夹爪腕部添加随动相机。
+保留：工序、车体路径、动作时序、镜头、灯光、成片规格。
+几何：镜头朝夹持点；机身与镜筒不得进入夹指开合范围。
+验收：复核逆运动学可达、夹爪与箱壁、相机净空及原机位可见性。
+回归：比对受保护的场景状态和镜头矩阵；局部外观变化可见。
+交付：成片、关键帧、版本变更和动画验收记录。
